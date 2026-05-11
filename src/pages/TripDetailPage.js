@@ -9,7 +9,7 @@ import JournalTab from '../components/JournalTab';
 import PointsTab from '../components/PointsTab';
 import DashboardTab from '../components/DashboardTab';
 
-const API = 'http://localhost:5001/api';
+const API = '/api';
 
 function TripDetailPage() {
   const { id } = useParams();

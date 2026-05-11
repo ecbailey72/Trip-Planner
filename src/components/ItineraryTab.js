@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API = 'http://localhost:5001/api';
+const API = '/api';
 
 const EVENT_TYPES = {
   flight:         { label: 'Flight',          icon: '✈',  color: '#185FA5', bg: '#E6F1FB' },

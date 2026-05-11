@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -176,6 +177,10 @@ app.delete('/api/trips/:tripId/points/:id', async (req, res) => {
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/test', (req, res) => { res.json({ message: 'Server is running!' }); });
+// ── SERVE REACT BUILD ─────────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, 'build')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

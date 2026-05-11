@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API = 'http://localhost:5001/api';
+const API = '/api';
 
 const CATEGORIES = ['Food & Drinks', 'Transportation', 'Shopping', 'Activities', 'Tips', 'Entrance Fees', 'Misc'];
 const METHODS = ['Credit card', 'Cash', 'Debit'];

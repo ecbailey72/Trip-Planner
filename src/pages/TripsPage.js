@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = 'http://localhost:5001/api';
+const API = '/api';
 
 function TripsPage() {
   const [trips, setTrips] = useState([]);
