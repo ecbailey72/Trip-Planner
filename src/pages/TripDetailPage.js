@@ -9,7 +9,7 @@ import JournalTab from '../components/JournalTab';
 import PointsTab from '../components/PointsTab';
 import DashboardTab from '../components/DashboardTab';
 
-const API = '/api';
+const API = 'http://localhost:5001/api';
 
 function TripDetailPage() {
   const { id } = useParams();
@@ -65,10 +65,51 @@ function TripDetailPage() {
     }
   };
 
+  const statusLabel = (status) => {
+    if (status === 'planning') return '🗓 Plan';
+    if (status === 'active') return '✈ Go';
+    if (status === 'complete') return '📸 Remember';
+    return status;
+  };
+
   if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
   if (!trip) return <div style={{ padding: '2rem' }}>Trip not found.</div>;
 
   const tabs = ['Dashboard', 'Expenses', 'Itinerary', 'Daily Spend', 'Checklist', 'Journal', 'Points'];
+
+  const tabSubtitle = (tab) => {
+    const phase = trip.status || 'planning';
+    const subtitles = {
+      planning: {
+        'Dashboard': 'Budget & trip overview',
+        'Expenses': 'Add bookings & estimates',
+        'Itinerary': 'Build your day-by-day plan',
+        'Daily Spend': 'Set your daily budget',
+        'Checklist': 'Pre-trip tasks to complete',
+        'Journal': 'Ready for your notes',
+        'Points': 'Plan your points strategy',
+      },
+      active: {
+        'Dashboard': "Today's overview",
+        'Expenses': 'Track payments as you go',
+        'Itinerary': "Today's schedule",
+        'Daily Spend': 'Log your spending',
+        'Checklist': 'Tasks to do on the trip',
+        'Journal': 'Capture memories now',
+        'Points': 'Track redemptions',
+      },
+      complete: {
+        'Dashboard': 'Trip summary & analysis',
+        'Expenses': 'Review what you spent',
+        'Itinerary': 'Your trip timeline',
+        'Daily Spend': 'Spending breakdown',
+        'Checklist': 'Post-trip follow-ups',
+        'Journal': 'Your travel memories',
+        'Points': 'Points performance',
+      }
+    };
+    return subtitles[phase]?.[tab] || '';
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8F7F4' }}>
@@ -159,9 +200,9 @@ function TripDetailPage() {
                   <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Status</label>
                   <select value={tripForm.status || 'planning'} onChange={e => setTripForm({ ...tripForm, status: e.target.value })}
                     style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }}>
-                    <option value="planning">Planning</option>
-                    <option value="active">Active</option>
-                    <option value="complete">Complete</option>
+                    <option value="planning">🗓 Plan — trip is being planned</option>
+                    <option value="active">✈ Go — trip is underway</option>
+                    <option value="complete">📸 Remember — trip is complete</option>
                   </select>
                 </div>
               </div>
@@ -189,14 +230,15 @@ function TripDetailPage() {
               <button key={tab}
                 onClick={() => { setActiveTab(key); window.location.hash = key; }}
                 style={{
-                  padding: '14px 18px', fontSize: '13px', border: 'none',
+                  padding: '10px 18px 12px', fontSize: '13px', border: 'none',
                   background: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap',
                   borderBottom: activeTab === key ? '2px solid #C9A84C' : '2px solid transparent',
                   color: activeTab === key ? '#1B2A4A' : '#8A9AB5',
                   fontWeight: activeTab === key ? '600' : '400',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s', textAlign: 'center'
                 }}>
-                {tab}
+                <div>{tab}</div>
+                <div style={{ fontSize: '10px', color: activeTab === key ? '#C9A84C' : '#aaa', marginTop: '2px', fontWeight: '400' }}>{tabSubtitle(tab)}</div>
               </button>
             );
           })}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API = '/api';
+const API = 'http://localhost:5001/api';
 
 function DashboardTab({ tripId, trip }) {
   const [expenses, setExpenses] = useState([]);
@@ -132,8 +132,8 @@ function DashboardTab({ tripId, trip }) {
     const diff = depart - now;
     if (diff <= 0) {
       const end = new Date(trip.endDate + 'T12:00:00');
-      if (now <= end) return { text: 'Trip underway! 🌴', color: '#1D9E75' };
-      return { text: 'Trip complete ✓', color: '#888' };
+      if (now <= end) return { text: '✈ Go — you\'re on the trip!', color: '#1A7A5C' };
+      return { text: '📸 Remember — trip complete', color: '#C9A84C' };
     }
     const days = Math.floor(diff / 86400000);
     if (days === 0) return { text: 'Departing today! 🌴', color: '#1D9E75' };
@@ -154,8 +154,42 @@ function DashboardTab({ tripId, trip }) {
     return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  // Phase helpers
+  const phase = trip.status || 'planning';
+  const isPlanning = phase === 'planning';
+  const isActive = phase === 'active';
+  const isComplete = phase === 'complete';
+
   return (
     <div>
+      {/* Phase banner */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        marginBottom: '1.5rem', padding: '12px 16px',
+        background: isComplete ? 'rgba(201,168,76,0.1)' : isActive ? 'rgba(26,122,92,0.08)' : 'rgba(27,42,74,0.06)',
+        borderRadius: '10px', border: isComplete ? '1px solid rgba(201,168,76,0.3)' : isActive ? '1px solid rgba(26,122,92,0.2)' : '1px solid rgba(27,42,74,0.1)'
+      }}>
+        <div>
+          <div style={{ fontSize: '16px', fontWeight: '700', color: isComplete ? '#C9A84C' : isActive ? '#1A7A5C' : '#1B2A4A', marginBottom: '2px' }}>
+            {isPlanning && '🗓 Plan — Building your trip'}
+            {isActive && '✈ Go — Trip is underway'}
+            {isComplete && '📸 Remember — Trip complete'}
+          </div>
+          <div style={{ fontSize: '12px', color: '#8A9AB5' }}>
+            {isPlanning && 'Add expenses, build your itinerary, and set your budget before you depart.'}
+            {isActive && "You're on the trip! Track daily spend, check your itinerary, and capture memories."}
+            {isComplete && 'Review what you spent, how your points performed, and what to plan better next time.'}
+          </div>
+        </div>
+        {isComplete && (
+          <button
+            onClick={() => {/* toggle planning view */}}
+            style={{ fontSize: '12px', padding: '5px 12px', background: 'transparent', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#C9A84C', cursor: 'pointer', whiteSpace: 'nowrap', marginLeft: '1rem' }}>
+            Show planning view
+          </button>
+        )}
+      </div>
+
       {/* Budget progress — top of dashboard */}
       {tripBudget > 0 && (
         <div style={{ background: budgetRemaining < 0 ? '#FCEBEB' : budgetPct > 85 ? '#FAEEDA' : '#E1F5EE', borderRadius: '12px', padding: '16px 20px', marginBottom: '1.5rem' }}>
@@ -302,7 +336,7 @@ function DashboardTab({ tripId, trip }) {
             <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#888', marginBottom: '10px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#C9A84C', display: 'inline-block' }} />
-                Planned
+                Budget / planned
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#1B2A4A', display: 'inline-block' }} />
@@ -322,7 +356,7 @@ function DashboardTab({ tripId, trip }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
                       <span style={{ fontWeight: '500', color: '#333' }}>{cat}</span>
                       <span style={{ color: '#888' }}>
-                        {budgetAmt > 0 && <span>Planned: ${Math.round(budgetAmt).toLocaleString()}</span>}
+                        {budgetAmt > 0 && <span>Budget: ${Math.round(budgetAmt).toLocaleString()}</span>}
                         {actualAmt > 0 && <span style={{ marginLeft: '8px', color: over ? '#BA7517' : '#1B2A4A', fontWeight: '600' }}>Actual: ${Math.round(actualAmt).toLocaleString()}{over ? ' ⚠' : ''}</span>}
                       </span>
                     </div>
@@ -343,7 +377,7 @@ function DashboardTab({ tripId, trip }) {
               })}
               <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888' }}>
                 <span>{expenses.length} expenses · {spending.length} daily spend entries</span>
-                <span style={{ fontWeight: '600', color: '#1a1a18' }}>Planned: ${Math.round(Object.values(budget).reduce((s,v) => s+v, 0)).toLocaleString()} · Actual: ${Math.round(Object.values(actual).reduce((s,v) => s+v, 0)).toLocaleString()}</span>
+                <span style={{ fontWeight: '600', color: '#1a1a18' }}>Budget: ${Math.round(Object.values(budget).reduce((s,v) => s+v, 0)).toLocaleString()} · Actual: ${Math.round(Object.values(actual).reduce((s,v) => s+v, 0)).toLocaleString()}</span>
               </div>
             </div>
           </div>

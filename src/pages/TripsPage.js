@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = '/api';
+const API = 'http://localhost:5001/api';
 
 function TripsPage() {
   const [trips, setTrips] = useState([]);
@@ -52,14 +52,22 @@ function TripsPage() {
   const statusColor = (status) => {
     if (status === 'planning') return '#1B2A4A';
     if (status === 'active') return '#1A7A5C';
-    if (status === 'complete') return '#888';
+    if (status === 'complete') return '#C9A84C';
     return '#888';
   };
 
   const statusBg = (status) => {
     if (status === 'planning') return 'rgba(27,42,74,0.1)';
     if (status === 'active') return 'rgba(26,122,92,0.1)';
+    if (status === 'complete') return 'rgba(201,168,76,0.12)';
     return '#f0f0f0';
+  };
+
+  const statusLabel = (status) => {
+    if (status === 'planning') return '🗓 Plan';
+    if (status === 'active') return '✈ Go';
+    if (status === 'complete') return '📸 Remember';
+    return status;
   };
 
   return (
@@ -72,7 +80,7 @@ function TripsPage() {
         position: 'sticky', top: 0, zIndex: 100
       }}>
         <img src="/logo-horizontal.png" alt="Ventaro"
-          style={{ height: '130px', width: 'auto', filter: 'brightness(0) invert(1)', cursor: 'pointer' }}
+          style={{ height: '52px', width: 'auto', filter: 'brightness(0) invert(1)', cursor: 'pointer' }}
           onClick={() => navigate('/')} />
         <button
           onClick={() => setShowForm(true)}
