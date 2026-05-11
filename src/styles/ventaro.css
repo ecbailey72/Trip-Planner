@@ -1,0 +1,310 @@
+/* ── VENTARO DESIGN SYSTEM ──────────────────────────────────────────── */
+:root {
+  /* Brand colors */
+  --navy:          #1B2A4A;
+  --navy-dark:     #111C33;
+  --navy-light:    #243759;
+  --gold:          #C9A84C;
+  --gold-light:    #E2C47A;
+  --gold-dark:     #A8852A;
+
+  /* UI colors */
+  --white:         #FFFFFF;
+  --off-white:     #F8F7F4;
+  --border:        #E8E6E1;
+  --border-light:  #F0EEE9;
+  --text-primary:  #1B2A4A;
+  --text-secondary:#4A5568;
+  --text-muted:    #8A9AB5;
+
+  /* Status colors */
+  --green:         #1A7A5C;
+  --green-bg:      #E1F5EE;
+  --amber:         #A8711A;
+  --amber-bg:      #FDF3E3;
+  --red:           #A32D2D;
+  --red-bg:        #FCEBEB;
+  --blue:          #1B4E7A;
+  --blue-bg:       #E6F1FB;
+  --purple:        #534AB7;
+  --purple-bg:     #EEEDFE;
+
+  /* Spacing */
+  --radius-sm:     6px;
+  --radius:        10px;
+  --radius-lg:     14px;
+  --radius-xl:     20px;
+
+  /* Shadows */
+  --shadow-sm:     0 1px 3px rgba(27,42,74,0.08);
+  --shadow:        0 4px 12px rgba(27,42,74,0.10);
+  --shadow-lg:     0 8px 24px rgba(27,42,74,0.14);
+}
+
+/* ── GLOBAL RESETS ───────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+  background: var(--off-white);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* ── VENTARO NAV ─────────────────────────────────────────────────────── */
+.v-nav {
+  background: var(--navy);
+  padding: 0 2rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+.v-nav-logo {
+  height: 36px;
+  width: auto;
+}
+
+.v-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.v-nav-link {
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.v-nav-link:hover {
+  color: var(--white);
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────── */
+.v-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.v-btn-primary {
+  background: var(--gold);
+  color: var(--navy-dark);
+}
+
+.v-btn-primary:hover {
+  background: var(--gold-light);
+}
+
+.v-btn-navy {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.v-btn-navy:hover {
+  background: var(--navy-light);
+}
+
+.v-btn-outline {
+  background: transparent;
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,0.4);
+}
+
+.v-btn-outline:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.v-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.v-btn-ghost:hover {
+  background: var(--off-white);
+}
+
+.v-btn-danger {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid #FFCCCC;
+}
+
+.v-btn-danger:hover {
+  background: var(--red-bg);
+}
+
+/* ── CARDS ───────────────────────────────────────────────────────────── */
+.v-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.v-card-muted {
+  background: var(--off-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+}
+
+/* ── METRIC TILES ────────────────────────────────────────────────────── */
+.v-metric {
+  background: var(--off-white);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.v-metric-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.v-metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ── SECTION HEADERS ─────────────────────────────────────────────────── */
+.v-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* ── BADGES ──────────────────────────────────────────────────────────── */
+.v-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* ── TRIP HEADER ─────────────────────────────────────────────────────── */
+.v-trip-header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 1.25rem 2rem;
+}
+
+/* ── TAB NAV ─────────────────────────────────────────────────────────── */
+.v-tab-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.v-tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.v-tab {
+  padding: 14px 18px;
+  font-size: 13px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-weight: 400;
+  transition: all 0.2s;
+}
+
+.v-tab:hover {
+  color: var(--text-primary);
+}
+
+.v-tab.active {
+  border-bottom-color: var(--gold);
+  color: var(--navy);
+  font-weight: 600;
+}
+
+/* ── FORMS ───────────────────────────────────────────────────────────── */
+.v-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--white);
+  color: var(--text-primary);
+}
+
+.v-input:focus {
+  border-color: var(--navy);
+}
+
+.v-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+/* ── PROGRESS BARS ───────────────────────────────────────────────────── */
+.v-progress-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.v-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--gold);
+  transition: width 0.4s ease;
+}
+
+/* ── PAGE CONTAINER ──────────────────────────────────────────────────── */
+.v-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.v-page-wide {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}

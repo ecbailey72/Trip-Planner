@@ -1,0 +1,413 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const API = 'http://localhost:5001/api';
+
+function DashboardTab({ tripId, trip }) {
+  const [expenses, setExpenses] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [spending, setSpending] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAll();
+  }, [tripId]);
+
+  const fetchAll = async () => {
+    try {
+      const [expRes, evtRes, taskRes, spendRes] = await Promise.all([
+        axios.get(`${API}/trips/${tripId}/expenses`),
+        axios.get(`${API}/trips/${tripId}/events`),
+        axios.get(`${API}/trips/${tripId}/tasks`),
+        axios.get(`${API}/trips/${tripId}/spending`)
+      ]);
+      setExpenses(expRes.data);
+      setEvents(evtRes.data);
+      setTasks(taskRes.data);
+      setSpending(spendRes.data);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div style={{ padding: '2rem', color: '#888' }}>Loading dashboard...</div>;
+
+  // ── FINANCIAL METRICS ───────────────────────────────────────────────
+  const confirmed = expenses.filter(e => e.type === 'confirmed');
+  const planned = expenses.filter(e => e.type === 'planned');
+
+  let totalValue = 0, cashPaid = 0, cashOwed = 0, ptsValue = 0, creditsValue = 0;
+  confirmed.forEach(e => {
+    totalValue += e.totalValue || 0;
+    e.payments?.forEach(p => {
+      if (p.type === 'pointsBooking') ptsValue += e.totalValue || 0;
+      if (p.type === 'cashOffsetByPoints') {
+        ptsValue += (p.pointsAmount || 0) * 0.01;
+        if (p.paid) cashPaid += p.netCashOut || 0;
+        else cashOwed += p.netCashOut || 0;
+      }
+      if (p.type === 'cash') {
+        if (p.paid) cashPaid += p.amount || 0;
+        else cashOwed += p.amount || 0;
+      }
+      if (p.type === 'credit') {
+        creditsValue += p.creditAmount || 0;
+        if (p.paid) cashPaid += p.remainingCash || 0;
+        else cashOwed += p.remainingCash || 0;
+      }
+    });
+  });
+
+  const plannedTotal = planned.reduce((sum, e) => sum + (e.totalValue || 0), 0);
+  const netCashNeeded = cashOwed + plannedTotal;
+
+  // Budget vs committed
+  const tripBudget = trip.tripBudget || 0;
+  const cppBenchmark = trip.cppBenchmark || 1.5;
+
+  // Calculate points value committed using benchmark
+  let pointsCommittedValue = 0;
+  confirmed.forEach(e => {
+    e.payments?.forEach(p => {
+      if (p.type === 'pointsBooking') {
+        pointsCommittedValue += (p.pointsAmount || 0) * cppBenchmark / 100;
+      }
+      if (p.type === 'cashOffsetByPoints') {
+        pointsCommittedValue += (p.pointsAmount || 0) * cppBenchmark / 100;
+      }
+    });
+  });
+
+  // Credits count against budget (earned)
+  let creditsCommitted = 0;
+  confirmed.forEach(e => {
+    e.payments?.forEach(p => {
+      if (p.type === 'credit') creditsCommitted += p.creditAmount || 0;
+    });
+  });
+
+  const budgetConsumed = cashPaid + cashOwed + pointsCommittedValue + creditsCommitted + plannedTotal;
+  const budgetRemaining = tripBudget - budgetConsumed;
+  const budgetPct = tripBudget > 0 ? Math.min(100, Math.round(budgetConsumed / tripBudget * 100)) : 0;
+
+  // Next cash payment due
+  const unpaidCash = [];
+  confirmed.forEach(e => {
+    e.payments?.forEach(p => {
+      if (!p.paid && (p.type === 'cash' || p.type === 'cashOffsetByPoints') && p.dueDate) {
+        unpaidCash.push({ date: p.dueDate, name: e.name, amount: p.type === 'cash' ? p.amount : p.netCashOut });
+      }
+    });
+  });
+  unpaidCash.sort((a, b) => a.date.localeCompare(b.date));
+  const nextDue = unpaidCash[0] || null;
+
+  // ── CHECKLIST METRICS ───────────────────────────────────────────────
+  const preTrip = tasks.filter(t => t.phase === 'preTrip');
+  const completedPreTrip = preTrip.filter(t => t.status === 'complete').length;
+  const taskPct = preTrip.length > 0 ? Math.round(completedPreTrip / preTrip.length * 100) : 0;
+
+  // ── DAILY SPEND METRICS ─────────────────────────────────────────────
+  const totalSpent = spending.reduce((sum, s) => sum + s.amount, 0);
+  const dailyBudget = trip.dailyBudget || 200;
+  const spendDays = [...new Set(spending.map(s => s.date))].length;
+  const avgPerDay = spendDays > 0 ? Math.round(totalSpent / spendDays) : 0;
+
+  // ── ITINERARY — today/tomorrow ──────────────────────────────────────
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const todayEvents = events.filter(e => e.date === today).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+  const tomorrowEvents = events.filter(e => e.date === tomorrow).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+  const showEvents = todayEvents.length ? todayEvents : tomorrowEvents;
+  const showLabel = todayEvents.length ? "Today's itinerary" : "Tomorrow's itinerary";
+
+  // ── COUNTDOWN ───────────────────────────────────────────────────────
+  const countdown = () => {
+    if (!trip.startDate) return null;
+    const depart = new Date(trip.startDate + 'T12:00:00');
+    const now = new Date();
+    const diff = depart - now;
+    if (diff <= 0) {
+      const end = new Date(trip.endDate + 'T12:00:00');
+      if (now <= end) return { text: 'Trip underway! 🌴', color: '#1D9E75' };
+      return { text: 'Trip complete ✓', color: '#888' };
+    }
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return { text: 'Departing today! 🌴', color: '#1D9E75' };
+    if (days === 1) return { text: 'Departing tomorrow!', color: '#BA7517' };
+    return { text: `${days} days to departure`, color: days <= 7 ? '#BA7517' : '#185FA5' };
+  };
+
+  const cd = countdown();
+
+  const EVENT_ICONS = {
+    flight: '✈', lodging: '🛏', activity: '🥾', tour: '🏴',
+    restaurant: '🍽', directions: '🧭', parking: '🅿', task: '✅',
+    free: '☀', transportation: '🚌', note: '📝'
+  };
+
+  const formatDate = (d) => {
+    if (!d) return '—';
+    return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  return (
+    <div>
+      {/* Budget progress — top of dashboard */}
+      {tripBudget > 0 && (
+        <div style={{ background: budgetRemaining < 0 ? '#FCEBEB' : budgetPct > 85 ? '#FAEEDA' : '#E1F5EE', borderRadius: '12px', padding: '16px 20px', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75', marginBottom: '3px' }}>Trip budget</div>
+              <div style={{ fontSize: '28px', fontWeight: '800', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75' }}>
+                ${Math.round(budgetRemaining >= 0 ? budgetRemaining : Math.abs(budgetRemaining)).toLocaleString()}
+                <span style={{ fontSize: '14px', fontWeight: '400', marginLeft: '6px' }}>{budgetRemaining >= 0 ? 'remaining' : 'over budget'}</span>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '13px', color: '#555' }}>${Math.round(budgetConsumed).toLocaleString()} committed</div>
+              <div style={{ fontSize: '13px', color: '#888' }}>of ${tripBudget.toLocaleString()} total budget</div>
+            </div>
+          </div>
+          <div style={{ height: '8px', background: 'rgba(0,0,0,0.1)', borderRadius: '4px' }}>
+            <div style={{ height: '8px', borderRadius: '4px', width: budgetPct + '%', background: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75', transition: 'width 0.4s' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: '#666' }}>
+            <span>Cash: ${Math.round(cashPaid + cashOwed).toLocaleString()} · Points: ${Math.round(pointsCommittedValue).toLocaleString()} · Credits: ${Math.round(creditsCommitted).toLocaleString()} · Planned: ${Math.round(plannedTotal).toLocaleString()}</span>
+            <span style={{ fontWeight: '600' }}>{budgetPct}%</span>
+          </div>
+        </div>
+      )}
+
+      {/* No budget set prompt */}
+      {!tripBudget && (
+        <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 18px', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: '13px', color: '#888' }}>No trip budget set — add one to track spending against your ceiling.</div>
+        </div>
+      )}
+
+      {/* Trip header */}
+      {cd && (
+        <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 18px', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <div style={{ fontSize: '13px', color: '#888', marginBottom: '2px' }}>{trip.startDate ? `${formatDate(trip.startDate)} — ${formatDate(trip.endDate)}` : 'Dates not set'}</div>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: '700', color: cd.color }}>{cd.text}</div>
+        </div>
+      )}
+
+      {/* Financial summary */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Financials</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+          {[
+            { label: 'Trip value', value: '$' + Math.round(totalValue + plannedTotal).toLocaleString(), color: '#1a1a18' },
+            { label: 'Points covering', value: '$' + Math.round(ptsValue).toLocaleString(), subtext: (totalValue + plannedTotal) > 0 ? Math.round(ptsValue / (totalValue + plannedTotal) * 100) + '% of trip value' : null, color: '#1D9E75', bg: '#E1F5EE' },
+            { label: 'Credits applied', value: '$' + Math.round(creditsValue).toLocaleString(), color: '#185FA5', bg: '#E6F1FB' },
+            { label: 'Cash paid', value: '$' + Math.round(cashPaid).toLocaleString(), color: '#1D9E75', bg: '#E1F5EE' },
+            { label: 'Cash still owed', value: '$' + Math.round(cashOwed).toLocaleString(), color: '#BA7517', bg: '#FAEEDA' },
+            { label: 'Cash to set aside', value: '$' + Math.round(netCashNeeded).toLocaleString(), color: '#A32D2D', bg: '#FCEBEB' },
+          ].map(m => (
+            <div key={m.label} style={{ background: m.bg || '#f5f5f5', borderRadius: '10px', padding: '10px 12px' }}>
+              <div style={{ fontSize: '10px', color: m.color, marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, lineHeight: 1.3 }}>{m.label}</div>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: m.color }}>{m.value}</div>
+              {m.subtext && <div style={{ fontSize: '9px', color: m.color, opacity: 0.75, marginTop: '2px', textAlign: 'right' }}>{m.subtext}</div>}
+            </div>
+          ))}
+        </div>
+
+        {/* Next cash payment */}
+        {nextDue && (
+          <div style={{ marginTop: '10px', padding: '12px 16px', background: '#FAEEDA', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: '#BA7517', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>Next cash payment due</div>
+              <div style={{ fontSize: '14px', fontWeight: '500', color: '#854F0B' }}>{nextDue.name}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#BA7517' }}>${Math.round(nextDue.amount || 0).toLocaleString()}</div>
+              <div style={{ fontSize: '12px', color: '#BA7517' }}>Due {formatDate(nextDue.date)}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Upcoming payments list — compact, no box */}
+        {unpaidCash.length > 1 && (
+          <div style={{ marginTop: '6px', paddingLeft: '16px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#888', marginBottom: '3px' }}>Additional upcoming payments</div>
+            {unpaidCash.slice(1).map((p, idx) => (
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888', lineHeight: '1.8' }}>
+                <span>{p.name}</span>
+                <span>${Math.round(p.amount || 0).toLocaleString()} · {formatDate(p.date)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Dual bar chart — budget vs actual by category */}
+      {(expenses.length > 0 || spending.length > 0) && (() => {
+        const COLORS = {
+          'Flights': '#185FA5',
+          'Lodging': '#1B2A4A',
+          'Activities & Tours': '#534AB7',
+          'Food & Dining': '#993C1D',
+          'Shopping & Souvenirs': '#993556',
+          'Gas, Tolls & Parking': '#5F5E5A',
+          'Insurance': '#3B6D11',
+          'Pre-trip & Misc': '#BA7517',
+        };
+
+        // Budget — confirmed + planned expenses by category
+        const budget = {};
+        expenses.forEach(e => {
+          if (!budget[e.category]) budget[e.category] = 0;
+          budget[e.category] += e.totalValue || 0;
+        });
+
+        // Actual — paid confirmed expenses + all daily spend
+        const actual = {};
+        expenses.filter(e => e.type === 'confirmed').forEach(e => {
+          const paid = e.payments?.some(p => p.paid);
+          if (paid) {
+            if (!actual[e.category]) actual[e.category] = 0;
+            actual[e.category] += e.totalValue || 0;
+          }
+        });
+        // Add daily spend to Food & Dining equivalent categories
+        const SPEND_CAT_MAP = {
+          'Food & Drinks': 'Food & Dining',
+          'Transportation': 'Gas, Tolls & Parking',
+          'Shopping': 'Shopping & Souvenirs',
+          'Activities': 'Activities & Tours',
+          'Tips': 'Pre-trip & Misc',
+          'Entrance Fees': 'Activities & Tours',
+          'Misc': 'Pre-trip & Misc',
+        };
+        spending.forEach(s => {
+          const mappedCat = SPEND_CAT_MAP[s.category] || 'Pre-trip & Misc';
+          if (!actual[mappedCat]) actual[mappedCat] = 0;
+          actual[mappedCat] += s.amount || 0;
+        });
+
+        // All categories that appear in either
+        const allCats = [...new Set([...Object.keys(budget), ...Object.keys(actual)])];
+        const maxVal = Math.max(...allCats.map(c => Math.max(budget[c] || 0, actual[c] || 0)));
+
+        return (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Spend by category</div>
+            <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#888', marginBottom: '10px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#C9A84C', display: 'inline-block' }} />
+                Planned
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#1B2A4A', display: 'inline-block' }} />
+                Actual spend
+              </span>
+            </div>
+            <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px' }}>
+              {allCats.sort((a, b) => (budget[b] || 0) - (budget[a] || 0)).map(cat => {
+                const budgetAmt = budget[cat] || 0;
+                const actualAmt = actual[cat] || 0;
+                const budgetPct = maxVal > 0 ? Math.round(budgetAmt / maxVal * 100) : 0;
+                const actualPct = maxVal > 0 ? Math.round(actualAmt / maxVal * 100) : 0;
+                const over = actualAmt > budgetAmt && budgetAmt > 0;
+                const color = COLORS[cat] || '#888';
+                return (
+                  <div key={cat} style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
+                      <span style={{ fontWeight: '500', color: '#333' }}>{cat}</span>
+                      <span style={{ color: '#888' }}>
+                        {budgetAmt > 0 && <span>Planned: ${Math.round(budgetAmt).toLocaleString()}</span>}
+                        {actualAmt > 0 && <span style={{ marginLeft: '8px', color: over ? '#BA7517' : '#1B2A4A', fontWeight: '600' }}>Actual: ${Math.round(actualAmt).toLocaleString()}{over ? ' ⚠' : ''}</span>}
+                      </span>
+                    </div>
+                    {/* Budget bar */}
+                    {budgetAmt > 0 && (
+                      <div style={{ height: '5px', background: '#e0e0e0', borderRadius: '3px', marginBottom: '3px' }}>
+                        <div style={{ height: '5px', borderRadius: '3px', width: budgetPct + '%', background: '#C9A84C', transition: 'width 0.4s' }} />
+                      </div>
+                    )}
+                    {/* Actual bar */}
+                    {actualAmt > 0 && (
+                      <div style={{ height: '5px', background: '#e0e0e0', borderRadius: '3px' }}>
+                        <div style={{ height: '5px', borderRadius: '3px', width: Math.min(100, actualPct) + '%', background: over ? '#BA7517' : color, transition: 'width 0.4s' }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888' }}>
+                <span>{expenses.length} expenses · {spending.length} daily spend entries</span>
+                <span style={{ fontWeight: '600', color: '#1a1a18' }}>Planned: ${Math.round(Object.values(budget).reduce((s,v) => s+v, 0)).toLocaleString()} · Actual: ${Math.round(Object.values(actual).reduce((s,v) => s+v, 0)).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Two column layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '1.5rem' }}>
+
+        {/* Pre-trip checklist */}
+        <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px' }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Pre-trip checklist</div>
+          <div style={{ fontSize: '22px', fontWeight: '700', marginBottom: '6px' }}>{completedPreTrip} / {preTrip.length}</div>
+          <div style={{ height: '5px', background: '#ddd', borderRadius: '3px', marginBottom: '6px' }}>
+            <div style={{ height: '5px', borderRadius: '3px', background: taskPct === 100 ? '#1D9E75' : '#BA7517', width: taskPct + '%', transition: 'width 0.3s' }} />
+          </div>
+          <div style={{ fontSize: '12px', color: '#888' }}>{taskPct}% complete · {preTrip.length - completedPreTrip} remaining</div>
+        </div>
+
+        {/* Daily spend */}
+        <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px' }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Daily spend</div>
+          {totalSpent > 0 ? (
+            <>
+              <div style={{ fontSize: '22px', fontWeight: '700', marginBottom: '4px', color: avgPerDay > dailyBudget ? '#BA7517' : '#1D9E75' }}>${avgPerDay}/day avg</div>
+              <div style={{ fontSize: '12px', color: '#888' }}>vs ${dailyBudget} budget · ${Math.round(totalSpent).toLocaleString()} total · {spendDays} days tracked</div>
+              {avgPerDay > dailyBudget && (
+                <div style={{ fontSize: '12px', color: '#BA7517', marginTop: '4px', fontWeight: '500' }}>⚠ ${avgPerDay - dailyBudget}/day over budget</div>
+              )}
+            </>
+          ) : (
+            <div style={{ fontSize: '13px', color: '#aaa' }}>No spending tracked yet</div>
+          )}
+        </div>
+      </div>
+
+      {/* Today / Tomorrow itinerary */}
+      <div>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>{showLabel}</div>
+        {showEvents.length > 0 ? (
+          <div style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '12px', padding: '0 1rem' }}>
+            {showEvents.slice(0, 6).map((event, idx) => (
+              <div key={event._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: idx < Math.min(showEvents.length, 6) - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f0f0ed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
+                  {EVENT_ICONS[event.type] || '📌'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a18' }}>{event.title}</div>
+                  {event.startTime && <div style={{ fontSize: '12px', color: '#888' }}>{event.startTime}{event.endTime ? ' → ' + event.endTime : ''}</div>}
+                </div>
+                {event.status === 'optional' && (
+                  <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '20px', background: '#f0f0f0', color: '#888', fontStyle: 'italic', flexShrink: 0 }}>optional</span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px', color: '#aaa', fontSize: '13px' }}>
+            {events.length === 0 ? 'No itinerary events added yet.' : 'No events scheduled for today or tomorrow.'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default DashboardTab;
