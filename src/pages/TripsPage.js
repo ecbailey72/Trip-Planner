@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = 'http://localhost:5001/api';
+const API = process.env.NODE_ENV === 'development' ? 'http://localhost:5001/api' : '/api';
 
 function TripsPage() {
   const [trips, setTrips] = useState([]);
