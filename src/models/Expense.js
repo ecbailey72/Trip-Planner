@@ -1,60 +1,47 @@
 const mongoose = require('mongoose');
 
-const PaymentSchema = new mongoose.Schema({
-  type: { 
-    type: String, 
-    enum: ['cash', 'pointsBooking', 'cashOffsetByPoints', 'credit'],
-    required: true 
-  },
-  dueDate: { type: String },
+const paymentSchema = new mongoose.Schema({
+  type: { type: String, enum: ['cash', 'pointsBooking', 'cashOffsetByPoints', 'credit'] },
+  dueDate: String,
   paid: { type: Boolean, default: false },
-  paidDate: { type: String },
-  // Cash fields
-  amount: { type: Number, default: 0 },
-  currency: { type: String, default: 'USD' },
-  method: { type: String },
-  // Points booking fields
-  pointsProgram: { type: String },
-  pointsAmount: { type: Number, default: 0 },
-  pointsAppliedDate: { type: String },
-  refundable: { type: Boolean, default: true },
-  // Cash offset by points fields
-  chargeAmount: { type: Number, default: 0 },
-  cardUsed: { type: String },
-  netCashOut: { type: Number, default: 0 },
-  // Credit fields
-  creditSource: { type: String },
-  creditAmount: { type: Number, default: 0 },
-  remainingCash: { type: Number, default: 0 },
-  notes: { type: String }
-});
+  // cash
+  amount: Number,
+  currency: String,
+  method: String,
+  // pointsBooking
+  pointsProgram: String,
+  pointsAmount: Number,
+  pointsAppliedDate: String,
+  refundable: Boolean,
+  // cashOffsetByPoints
+  chargeAmount: Number,
+  cardUsed: String,
+  netCashOut: Number,
+  // credit
+  creditSource: String,
+  creditAmount: Number,
+  remainingCash: Number,
+  notes: String
+}, { _id: false });
 
-const ExpenseSchema = new mongoose.Schema({
+const expenseSchema = new mongoose.Schema({
   tripId: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip', required: true },
   name: { type: String, required: true },
-  category: { 
+  category: {
     type: String,
-    enum: [
-      'Flights',
-      'Lodging', 
-      'Activities & Tours',
-      'Food & Dining',
-      'Shopping & Souvenirs',
-      'Gas, Tolls & Parking',
-      'Insurance',
-      'Pre-trip & Misc'
-    ]
+    enum: ['Flights', 'Lodging', 'Activities & Tours', 'Food & Dining', 'Shopping & Souvenirs', 'Car Rental', 'Gas, Tolls & Parking', 'Insurance', 'Pre-trip & Misc'],
+    required: true
   },
   type: { type: String, enum: ['confirmed', 'planned'], default: 'confirmed' },
   eventStatus: { type: String, enum: ['prepaid', 'payOnSite', 'optional'], default: 'prepaid' },
   totalValue: { type: Number, default: 0 },
-  activityDate: { type: String },
-  bookedDate: { type: String },
-  vendor: { type: String },
-  confirmationNumber: { type: String },
-  notes: { type: String },
-  payments: [PaymentSchema],
-  createdAt: { type: Date, default: Date.now }
-});
+  estimatedValue: { type: Number, default: null },  // original quote/estimate before trip
+  activityDate: String,
+  bookedDate: String,
+  vendor: String,
+  confirmationNumber: String,
+  notes: String,
+  payments: [paymentSchema]
+}, { timestamps: true });
 
-module.exports = mongoose.model('Expense', ExpenseSchema);
+module.exports = mongoose.model('Expense', expenseSchema);

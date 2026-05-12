@@ -288,16 +288,17 @@ function DashboardTab({ tripId, trip }) {
           'Activities & Tours': '#534AB7',
           'Food & Dining': '#993C1D',
           'Shopping & Souvenirs': '#993556',
+          'Car Rental': '#2E7D9A',
           'Gas, Tolls & Parking': '#5F5E5A',
           'Insurance': '#3B6D11',
           'Pre-trip & Misc': '#BA7517',
         };
 
-        // Budget — confirmed + planned expenses by category
+        // Budget — use estimatedValue if set, otherwise totalValue
         const budget = {};
         expenses.forEach(e => {
           if (!budget[e.category]) budget[e.category] = 0;
-          budget[e.category] += e.totalValue || 0;
+          budget[e.category] += e.estimatedValue != null ? e.estimatedValue : (e.totalValue || 0);
         });
 
         // Actual — paid confirmed expenses + all daily spend

@@ -5,7 +5,7 @@ const API = process.env.NODE_ENV === 'development' ? 'http://localhost:5001/api'
 
 const CATEGORIES = [
   'Flights', 'Lodging', 'Activities & Tours', 'Food & Dining',
-  'Shopping & Souvenirs', 'Gas, Tolls & Parking', 'Insurance', 'Pre-trip & Misc'
+  'Shopping & Souvenirs', 'Car Rental', 'Gas, Tolls & Parking', 'Insurance', 'Pre-trip & Misc'
 ];
 
 const EVENT_STATUS = [
@@ -205,10 +205,11 @@ function ExpensesTab({ tripId }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [inlineEditId, setInlineEditId] = useState(null); // expense._id being edited inline
   const [payments, setPayments] = useState([{ ...emptyPayment }]);
   const [form, setForm] = useState({
     name: '', category: 'Flights', type: 'confirmed', eventStatus: 'prepaid',
-    totalValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: ''
+    totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: ''
   });
 
   useEffect(() => { fetchExpenses(); }, [tripId]);
@@ -226,10 +227,12 @@ function ExpensesTab({ tripId }) {
 
   const openForm = (expense = null) => {
     if (expense) {
+      setInlineEditId(expense._id);
       setEditingExpense(expense);
       setForm({
         name: expense.name, category: expense.category, type: expense.type,
         eventStatus: expense.eventStatus, totalValue: expense.totalValue,
+        estimatedValue: expense.estimatedValue || '',
         activityDate: expense.activityDate || '', bookedDate: expense.bookedDate || '',
         vendor: expense.vendor || '', confirmationNumber: expense.confirmationNumber || '',
         notes: expense.notes || ''
@@ -237,7 +240,8 @@ function ExpensesTab({ tripId }) {
       setPayments(expense.payments && expense.payments.length > 0 ? expense.payments : [{ ...emptyPayment }]);
     } else {
       setEditingExpense(null);
-      setForm({ name: '', category: 'Flights', type: 'confirmed', eventStatus: 'prepaid', totalValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '' });
+      setInlineEditId(null);
+      setForm({ name: '', category: 'Flights', type: 'confirmed', eventStatus: 'prepaid', totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '' });
       setPayments([{ ...emptyPayment }]);
     }
     setShowForm(true);
@@ -270,6 +274,7 @@ function ExpensesTab({ tripId }) {
       }
       setShowForm(false);
       setEditingExpense(null);
+      setInlineEditId(null);
     } catch (err) {
       console.error('Error saving expense:', err);
       alert('Error saving expense. Please try again.');
@@ -326,7 +331,7 @@ function ExpensesTab({ tripId }) {
         </button>
       </div>
 
-      {showForm && (
+      {showForm && !inlineEditId && (
         <div style={{ background: '#f5f5f5', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
           <h3 style={{ marginBottom: '1rem', fontSize: '16px', fontWeight: '600' }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h3>
 
@@ -362,10 +367,18 @@ function ExpensesTab({ tripId }) {
               </div>
             )}
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount ($)' : 'Total value ($)'}</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount ($)' : 'Final / actual value ($)'}</label>
               <input type="number" value={form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
                 placeholder="0" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
+            {form.type === 'confirmed' && (
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote / estimate ($) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
+              <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
+                placeholder="What you expected to pay" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+              <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>e.g. quoted price before unexpected fees</div>
+            </div>
+            )}
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Activity date</label>
               <input type="date" value={form.activityDate} onChange={e => setForm({ ...form, activityDate: e.target.value })}
@@ -417,7 +430,7 @@ function ExpensesTab({ tripId }) {
             <button onClick={handleSave} style={{ padding: '8px 20px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
               {editingExpense ? 'Save changes' : 'Add expense'}
             </button>
-            <button onClick={() => { setShowForm(false); setEditingExpense(null); }}
+            <button onClick={() => { setShowForm(false); setEditingExpense(null); setInlineEditId(null); }}
               style={{ padding: '8px 20px', background: 'transparent', border: '1px solid #ccc', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
               Cancel
             </button>
@@ -462,13 +475,72 @@ function ExpensesTab({ tripId }) {
                       )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
-                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '6px' }}>${(expense.totalValue || 0).toLocaleString()}</div>
+                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}</div>
+                      {expense.estimatedValue != null && expense.estimatedValue !== '' && expense.estimatedValue !== expense.totalValue && (
+                        <div style={{ fontSize: '11px', marginBottom: '4px', color: expense.totalValue > expense.estimatedValue ? '#A32D2D' : '#1A7A5C', fontWeight: '600' }}>
+                          {expense.totalValue > expense.estimatedValue ? '▲' : '▼'} ${Math.abs(Math.round(expense.totalValue - expense.estimatedValue)).toLocaleString()} vs ${Math.round(expense.estimatedValue).toLocaleString()} est.
+                        </div>
+                      )}
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                         <button onClick={() => openForm(expense)} style={{ fontSize: '12px', padding: '3px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', color: '#555', cursor: 'pointer' }}>Edit</button>
                         <button onClick={() => handleDelete(expense._id)} style={{ fontSize: '12px', padding: '3px 10px', border: '1px solid #ffcccc', borderRadius: '6px', background: 'transparent', color: '#cc4444', cursor: 'pointer' }}>Delete</button>
                       </div>
                     </div>
                   </div>
+                  {/* Inline edit form */}
+                  {inlineEditId === expense._id && showForm && (
+                    <div style={{ marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense name *</label>
+                          <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Category</label>
+                          <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Final / actual value ($)</label>
+                          <input type="number" value={form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote ($) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
+                          <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Activity date</label>
+                          <input type="date" value={form.activityDate} onChange={e => setForm({ ...form, activityDate: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Vendor</label>
+                          <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Confirmation #</label>
+                          <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Notes</label>
+                          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+                            rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={handleSave} style={{ padding: '7px 18px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Save changes</button>
+                        <button onClick={() => { setShowForm(false); setEditingExpense(null); setInlineEditId(null); }}
+                          style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #ccc', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -488,7 +560,12 @@ function ExpensesTab({ tripId }) {
                       <div style={{ fontSize: '12px', color: '#888' }}>{expense.category}{expense.notes && ` · ${expense.notes}`}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
-                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '6px' }}>${(expense.totalValue || 0).toLocaleString()}</div>
+                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}</div>
+                      {expense.estimatedValue != null && expense.estimatedValue !== '' && expense.estimatedValue !== expense.totalValue && (
+                        <div style={{ fontSize: '11px', marginBottom: '4px', color: expense.totalValue > expense.estimatedValue ? '#A32D2D' : '#1A7A5C', fontWeight: '600' }}>
+                          {expense.totalValue > expense.estimatedValue ? '▲' : '▼'} ${Math.abs(Math.round(expense.totalValue - expense.estimatedValue)).toLocaleString()} vs ${Math.round(expense.estimatedValue).toLocaleString()} est.
+                        </div>
+                      )}
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                         <button onClick={() => openForm(expense)} style={{ fontSize: '12px', padding: '3px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', color: '#555', cursor: 'pointer' }}>Edit</button>
                         <button onClick={() => handleDelete(expense._id)} style={{ fontSize: '12px', padding: '3px 10px', border: '1px solid #ffcccc', borderRadius: '6px', background: 'transparent', color: '#cc4444', cursor: 'pointer' }}>Delete</button>

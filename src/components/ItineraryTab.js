@@ -39,6 +39,8 @@ function ItineraryTab({ tripId }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [inlineFormDay, setInlineFormDay] = useState(null); // date string for inline add
+  const [inlineEditId, setInlineEditId] = useState(null); // event._id for inline edit
   const [activeDay, setActiveDay] = useState('all');
   const [form, setForm] = useState(emptyForm);
 
@@ -57,6 +59,8 @@ function ItineraryTab({ tripId }) {
 
   const openForm = (event = null, date = '') => {
     if (event) {
+      setInlineEditId(event._id);
+      setInlineFormDay(null);
       setEditingEvent(event);
       setForm({
         date: event.date || '',
@@ -71,11 +75,22 @@ function ItineraryTab({ tripId }) {
         confirmationNumber: event.confirmationNumber || '',
         contact: event.contact || { website: '', address: '', phone: '', email: '' }
       });
-    } else {
+      setShowForm(true);
+    } else if (date) {
+      // Inline form for a specific day
       setEditingEvent(null);
+      setInlineEditId(null);
       setForm({ ...emptyForm, date });
+      setInlineFormDay(date);
+      setShowForm(false);
+    } else {
+      // Top-level new event form
+      setEditingEvent(null);
+      setInlineEditId(null);
+      setInlineFormDay(null);
+      setForm({ ...emptyForm, date });
+      setShowForm(true);
     }
-    setShowForm(true);
   };
 
   const handleSave = async () => {
@@ -91,6 +106,8 @@ function ItineraryTab({ tripId }) {
       }
       setShowForm(false);
       setEditingEvent(null);
+      setInlineFormDay(null);
+      setInlineEditId(null);
     } catch (err) {
       console.error('Error saving event:', err);
       alert('Error saving event.');
@@ -160,7 +177,7 @@ function ItineraryTab({ tripId }) {
       </div>
 
       {/* Event form */}
-      {showForm && (
+      {showForm && !inlineFormDay && !inlineEditId && (
         <div style={{ background: '#f5f5f5', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
           <h3 style={{ marginBottom: '1rem', fontSize: '16px', fontWeight: '600' }}>{editingEvent ? 'Edit Event' : 'New Event'}</h3>
 
@@ -277,7 +294,7 @@ function ItineraryTab({ tripId }) {
               style={{ padding: '8px 20px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
               {editingEvent ? 'Save changes' : 'Add event'}
             </button>
-            <button onClick={() => { setShowForm(false); setEditingEvent(null); }}
+            <button onClick={() => { setShowForm(false); setEditingEvent(null); setInlineFormDay(null); setInlineEditId(null); }}
               style={{ padding: '8px 20px', background: 'transparent', border: '1px solid #ccc', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
               Cancel
             </button>
@@ -394,11 +411,59 @@ function ItineraryTab({ tripId }) {
                   );
                 })}
 
-              {/* Add event to this day */}
-              <button onClick={() => openForm(null, date)}
-                style={{ width: '100%', padding: '8px', fontSize: '12px', border: '1px dashed #ccc', borderRadius: '8px', background: 'transparent', color: '#888', cursor: 'pointer', marginTop: '4px' }}>
-                + Add event on {formatDate(date)}
-              </button>
+              {/* Add event to this day — inline */}
+              {inlineFormDay === date ? (
+                <div style={{ background: '#f0f2f8', border: '1px solid #d0d8e8', borderRadius: '10px', padding: '1rem', marginTop: '8px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Event title *</label>
+                      <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} autoFocus
+                        placeholder="e.g. Arrive at hotel"
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Type</label>
+                      <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }}>
+                        {Object.entries(EVENT_TYPES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Start time</label>
+                      <input value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })}
+                        placeholder="e.g. 9:00 AM"
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Subtitle</label>
+                      <input value={form.subtitle} onChange={e => setForm({ ...form, subtitle: e.target.value })}
+                        placeholder="e.g. Flight details, address..."
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Notes</label>
+                      <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+                        rows={2} placeholder="Details, reminders..."
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', resize: 'vertical' }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={handleSave}
+                      style={{ padding: '7px 18px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
+                      Add event
+                    </button>
+                    <button onClick={() => { setInlineFormDay(null); setForm(emptyForm); }}
+                      style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #E8E6E1', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', color: '#4A5568' }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button onClick={() => openForm(null, date)}
+                  style={{ width: '100%', padding: '8px', fontSize: '12px', border: '1px dashed #ccc', borderRadius: '8px', background: 'transparent', color: '#888', cursor: 'pointer', marginTop: '4px' }}>
+                  + Add event on {formatDate(date)}
+                </button>
+              )}
             </div>
           ))}
         </div>
