@@ -443,3 +443,4 @@ function DashboardTab({ tripId, trip }) {
 }
 
 export default DashboardTab;
+ 
