@@ -64,9 +64,9 @@ function TripsPage() {
   };
 
   const statusLabel = (status) => {
-    if (status === 'planning') return '🗓 Plan';
-    if (status === 'active') return '✈ Go';
-    if (status === 'complete') return '📸 Remember';
+    if (status === 'planning') return 'Phase: Plan (trip planning)';
+    if (status === 'active') return 'Phase: Go (trip underway)';
+    if (status === 'complete') return 'Phase: Remember (trip complete)';
     return status;
   };
 

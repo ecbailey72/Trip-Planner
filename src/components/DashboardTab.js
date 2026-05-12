@@ -171,15 +171,21 @@ function DashboardTab({ tripId, trip }) {
       }}>
         <div>
           <div style={{ fontSize: '16px', fontWeight: '700', color: isComplete ? '#C9A84C' : isActive ? '#1A7A5C' : '#1B2A4A', marginBottom: '2px' }}>
-            {isPlanning && '🗓 Plan — Building your trip'}
-            {isActive && '✈ Go — Trip is underway'}
-            {isComplete && '📸 Remember — Trip complete'}
+            {isPlanning && 'PHASE: Plan — Building your trip 🗓'}
+            {isActive && 'PHASE: Go — Trip is underway ✈'}
+            {isComplete && 'PHASE: Remember — Trip complete 📸'}
           </div>
-          <div style={{ fontSize: '12px', color: '#8A9AB5' }}>
+          <div style={{ fontSize: '12px', color: '#8A9AB5', marginTop: '2px' }}>
             {isPlanning && 'Add expenses, build your itinerary, and set your budget before you depart.'}
             {isActive && "You're on the trip! Track daily spend, check your itinerary, and capture memories."}
             {isComplete && 'Review what you spent, how your points performed, and what to plan better next time.'}
           </div>
+          {trip.startDate && (
+            <div style={{ fontSize: '12px', color: '#8A9AB5', marginTop: '4px' }}>
+              {formatDate(trip.startDate)} — {formatDate(trip.endDate)}
+              {cd && !isComplete && <span style={{ marginLeft: '10px', fontWeight: '600', color: cd.color }}>{cd.text}</span>}
+            </div>
+          )}
         </div>
         {isComplete && (
           <button
@@ -223,15 +229,7 @@ function DashboardTab({ tripId, trip }) {
         </div>
       )}
 
-      {/* Trip header */}
-      {cd && (
-        <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 18px', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <div>
-            <div style={{ fontSize: '13px', color: '#888', marginBottom: '2px' }}>{trip.startDate ? `${formatDate(trip.startDate)} — ${formatDate(trip.endDate)}` : 'Dates not set'}</div>
-          </div>
-          <div style={{ fontSize: '16px', fontWeight: '700', color: cd.color }}>{cd.text}</div>
-        </div>
-      )}
+
 
       {/* Financial summary */}
       <div style={{ marginBottom: '1.5rem' }}>
@@ -336,7 +334,7 @@ function DashboardTab({ tripId, trip }) {
             <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#888', marginBottom: '10px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#C9A84C', display: 'inline-block' }} />
-                Budget / planned
+                Planned
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#1B2A4A', display: 'inline-block' }} />
@@ -356,7 +354,7 @@ function DashboardTab({ tripId, trip }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
                       <span style={{ fontWeight: '500', color: '#333' }}>{cat}</span>
                       <span style={{ color: '#888' }}>
-                        {budgetAmt > 0 && <span>Budget: ${Math.round(budgetAmt).toLocaleString()}</span>}
+                        {budgetAmt > 0 && <span>Planned: ${Math.round(budgetAmt).toLocaleString()}</span>}
                         {actualAmt > 0 && <span style={{ marginLeft: '8px', color: over ? '#BA7517' : '#1B2A4A', fontWeight: '600' }}>Actual: ${Math.round(actualAmt).toLocaleString()}{over ? ' ⚠' : ''}</span>}
                       </span>
                     </div>
@@ -377,7 +375,7 @@ function DashboardTab({ tripId, trip }) {
               })}
               <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888' }}>
                 <span>{expenses.length} expenses · {spending.length} daily spend entries</span>
-                <span style={{ fontWeight: '600', color: '#1a1a18' }}>Budget: ${Math.round(Object.values(budget).reduce((s,v) => s+v, 0)).toLocaleString()} · Actual: ${Math.round(Object.values(actual).reduce((s,v) => s+v, 0)).toLocaleString()}</span>
+                <span style={{ fontWeight: '600', color: '#1a1a18' }}>Planned: ${Math.round(Object.values(budget).reduce((s,v) => s+v, 0)).toLocaleString()} · Actual: ${Math.round(Object.values(actual).reduce((s,v) => s+v, 0)).toLocaleString()}</span>
               </div>
             </div>
           </div>
