@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API = process.env.NODE_ENV === 'development' ? 'http://localhost:5001/api' : '/api';
+const API = 'http://localhost:5001/api';
 
 function DashboardTab({ tripId, trip }) {
   const [expenses, setExpenses] = useState([]);
   const [events, setEvents] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [spending, setSpending] = useState([]);
+  const [showPlanningView, setShowPlanningView] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -189,15 +190,15 @@ function DashboardTab({ tripId, trip }) {
         </div>
         {isComplete && (
           <button
-            onClick={() => {/* toggle planning view */}}
+            onClick={() => setShowPlanningView(v => !v)}
             style={{ fontSize: '12px', padding: '5px 12px', background: 'transparent', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#C9A84C', cursor: 'pointer', whiteSpace: 'nowrap', marginLeft: '1rem' }}>
-            Show planning view
+            {showPlanningView ? 'Show remember view' : 'Show planning view'}
           </button>
         )}
       </div>
 
       {/* Budget progress — top of dashboard */}
-      {tripBudget > 0 && (
+      {tripBudget > 0 && (!isComplete || showPlanningView) && (
         <div style={{ background: budgetRemaining < 0 ? '#FCEBEB' : budgetPct > 85 ? '#FAEEDA' : '#E1F5EE', borderRadius: '12px', padding: '16px 20px', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
             <div>
@@ -232,7 +233,7 @@ function DashboardTab({ tripId, trip }) {
 
 
       {/* Financial summary */}
-      <div style={{ marginBottom: '1.5rem' }}>
+      {(!isComplete || showPlanningView) && <div style={{ marginBottom: '1.5rem' }}>
         <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Financials</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
           {[
@@ -277,7 +278,7 @@ function DashboardTab({ tripId, trip }) {
             ))}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Dual bar chart — budget vs actual by category */}
       {(expenses.length > 0 || spending.length > 0) && (() => {
@@ -443,4 +444,3 @@ function DashboardTab({ tripId, trip }) {
 }
 
 export default DashboardTab;
- 
