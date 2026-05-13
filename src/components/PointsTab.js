@@ -20,13 +20,14 @@ const emptyForm = {
   anticipatedAdditions: []
 };
 
-const emptyAnticipated = { amount: '', expectedDate: '', description: '' };
+const emptyAnticipated = { amount: '', expectedDate: '', description: '', posted: false };
 
 function PointsTab({ tripId, expenses = [] }) {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
+  const [inlineEditId, setInlineEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [benchmark, setBenchmark] = useState(1.5);
   const [editingBenchmark, setEditingBenchmark] = useState(false);
@@ -47,6 +48,7 @@ function PointsTab({ tripId, expenses = [] }) {
 
   const openForm = (account = null) => {
     if (account) {
+      setInlineEditId(account._id);
       setEditingAccount(account);
       setForm({
         program: account.program,
@@ -56,9 +58,10 @@ function PointsTab({ tripId, expenses = [] }) {
       });
     } else {
       setEditingAccount(null);
+      setInlineEditId(null);
       setForm(emptyForm);
     }
-    setShowForm(true);
+    if (!account) setShowForm(true);
   };
 
   const handleSave = async () => {
@@ -74,6 +77,7 @@ function PointsTab({ tripId, expenses = [] }) {
       }
       setShowForm(false);
       setEditingAccount(null);
+      setInlineEditId(null);
     } catch (err) {
       console.error('Error saving account:', err);
       alert('Error saving. Please try again.');
@@ -123,6 +127,18 @@ function PointsTab({ tripId, expenses = [] }) {
     return (account.anticipatedAdditions || []).reduce((sum, a) => sum + (a.amount || 0), 0);
   };
 
+  const getPostedCredits = (account) => {
+    return (account.anticipatedAdditions || [])
+      .filter(a => a.posted)
+      .reduce((sum, a) => sum + (a.amount || 0), 0);
+  };
+
+  const getUnpostedCredits = (account) => {
+    return (account.anticipatedAdditions || [])
+      .filter(a => !a.posted)
+      .reduce((sum, a) => sum + (a.amount || 0), 0);
+  };
+
   const calcCpp = (expenseAmt, points) => {
     if (!points || points === 0) return 0;
     return parseFloat((expenseAmt / points * 100).toFixed(2));
@@ -145,22 +161,32 @@ function PointsTab({ tripId, expenses = [] }) {
 
   // Total points value across all accounts
   const totalPointsValue = accounts.reduce((sum, a) => {
-    const planning = a.currentBalance + getAnticipated(a);
-    return sum + Math.round(planning * benchmark / 100);
+    const committed = getCommitted(a.program);
+    const available = a.currentBalance + getPostedCredits(a) - committed;
+    return sum + Math.round(Math.max(0, available) * benchmark / 100);
+  }, 0);
+
+  const totalPointsProjected = accounts.reduce((sum, a) => {
+    const committed = getCommitted(a.program);
+    const available = a.currentBalance + getAnticipated(a) - committed;
+    return sum + Math.round(Math.max(0, available) * benchmark / 100);
   }, 0);
 
   return (
     <div>
       {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', marginBottom: '1.5rem' }}>
-        <div style={{ background: '#f5f5f5', borderRadius: '10px', padding: '12px 14px' }}>
-          <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Programs tracked</div>
+        <div style={{ background: '#EEF1F8', border: '1px solid #d0d8e8', borderRadius: '10px', padding: '12px 14px' }}>
+          <div style={{ fontSize: '11px', color: '#1B2A4A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Programs tracked</div>
           <div style={{ fontSize: '20px', fontWeight: '700' }}>{accounts.length}</div>
         </div>
         <div style={{ background: '#FAEEDA', borderRadius: '10px', padding: '12px 14px' }}>
-          <div style={{ fontSize: '11px', color: '#BA7517', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Est. total value</div>
+          <div style={{ fontSize: '11px', color: '#BA7517', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Est. available value</div>
           <div style={{ fontSize: '20px', fontWeight: '700', color: '#BA7517' }}>${totalPointsValue.toLocaleString()}</div>
           <div style={{ fontSize: '10px', color: '#BA7517', marginTop: '2px' }}>at {benchmark} cpp benchmark</div>
+          {totalPointsProjected > totalPointsValue && (
+            <div style={{ fontSize: '10px', color: '#185FA5', marginTop: '3px' }}>${totalPointsProjected.toLocaleString()} projected w/ anticipated</div>
+          )}
         </div>
         {(() => {
           const allPayments = accounts.flatMap(a => getPointsPayments(a.program));
@@ -183,8 +209,8 @@ function PointsTab({ tripId, expenses = [] }) {
           );
         })()}
 
-        <div style={{ background: '#f5f5f5', borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cpp benchmark</div>
+        <div style={{ background: '#EEF1F8', border: '1px solid #d0d8e8', borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: '11px', color: '#1B2A4A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cpp benchmark</div>
           {editingBenchmark ? (
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               <input type="number" step="0.1" value={benchmarkInput} onChange={e => setBenchmarkInput(parseFloat(e.target.value) || 1.5)}
@@ -208,7 +234,7 @@ function PointsTab({ tripId, expenses = [] }) {
       <div style={{ background: '#E6F1FB', borderRadius: '10px', padding: '12px 16px', marginBottom: '1.5rem', borderLeft: '4px solid #185FA5' }}>
         <div style={{ fontSize: '12px', fontWeight: '600', color: '#185FA5', marginBottom: '5px' }}>How to use this points tool</div>
         <div style={{ fontSize: '12px', color: '#333', lineHeight: 1.6 }}>
-          Enter your current balance when you start planning this trip — this is a planning snapshot, not a live tracker. If your balance changes significantly before the trip (a large redemption, a statement credit, closing a card), update it manually. When adding or editing an account, use the <strong>Anticipated additions</strong> section to record points you're confident are coming but haven't posted yet — intro bonuses after hitting spend thresholds, a known transfer, or a large purchase you're planning. Don't include speculative earnings.
+          Enter your <strong>starting balance</strong> when you begin planning — this is a snapshot, not a live tracker. Point redemptions entered in the Expenses tab automatically deduct from your available balance. Use the <strong>Credits</strong> section to record any additional points you earn or expect — check <strong>Posted</strong> if the points are already in your account, or leave unchecked if they're anticipated but not yet posted. Don't include speculative earnings.
         </div>
       </div>
 
@@ -221,7 +247,7 @@ function PointsTab({ tripId, expenses = [] }) {
       </div>
 
       {/* Form */}
-      {showForm && (
+      {showForm && !inlineEditId && (
         <div style={{ background: '#f5f5f5', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
           <h3 style={{ marginBottom: '1rem', fontSize: '16px', fontWeight: '600' }}>{editingAccount ? 'Edit Account' : 'Add Points Account'}</h3>
 
@@ -237,7 +263,7 @@ function PointsTab({ tripId, expenses = [] }) {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Current balance</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Starting balance</label>
               <input type="number" value={form.currentBalance} onChange={e => setForm({ ...form, currentBalance: parseInt(e.target.value) || '' })}
                 placeholder="Points balance today"
                 style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
@@ -250,10 +276,10 @@ function PointsTab({ tripId, expenses = [] }) {
             </div>
           </div>
 
-          {/* Anticipated additions */}
+          {/* Credits */}
           <div style={{ marginBottom: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '500' }}>Anticipated additions</label>
+              <label style={{ fontSize: '12px', fontWeight: '500' }}>Credits (earned or anticipated)</label>
               <button onClick={addAnticipated}
                 style={{ fontSize: '11px', padding: '3px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', cursor: 'pointer' }}>
                 + Add
@@ -263,7 +289,7 @@ function PointsTab({ tripId, expenses = [] }) {
               <p style={{ fontSize: '12px', color: '#aaa' }}>e.g. credit card intro bonus, upcoming earn</p>
             )}
             {form.anticipatedAdditions.map((item, idx) => (
-              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto auto', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
                 <input type="number" value={item.amount} onChange={e => updateAnticipated(idx, 'amount', parseInt(e.target.value) || '')}
                   placeholder="Points" style={{ padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
                 <input type="date" value={item.expectedDate} onChange={e => updateAnticipated(idx, 'expectedDate', e.target.value)}
@@ -271,6 +297,10 @@ function PointsTab({ tripId, expenses = [] }) {
                 <input value={item.description} onChange={e => updateAnticipated(idx, 'description', e.target.value)}
                   placeholder="e.g. Intro bonus after $4K spend"
                   style={{ padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#555', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <input type="checkbox" checked={item.posted || false} onChange={e => updateAnticipated(idx, 'posted', e.target.checked)} />
+                  Posted
+                </label>
                 <button onClick={() => removeAnticipated(idx)}
                   style={{ padding: '4px 8px', border: '1px solid #ffcccc', borderRadius: '6px', background: 'transparent', color: '#cc4444', cursor: 'pointer', fontSize: '12px' }}>✕</button>
               </div>
@@ -299,9 +329,9 @@ function PointsTab({ tripId, expenses = [] }) {
         <div>
           {accounts.map(account => {
             const committed = getCommitted(account.program);
-            const anticipated = getAnticipated(account);
-            const planningBalance = account.currentBalance + anticipated;
-            const remaining = planningBalance - committed;
+            const posted = getPostedCredits(account);
+            const unposted = getUnpostedCredits(account);
+            const available = account.currentBalance + posted - committed;
             const payments = getPointsPayments(account.program);
 
             return (
@@ -321,15 +351,21 @@ function PointsTab({ tripId, expenses = [] }) {
                 </div>
 
                 {/* Balance tiles */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', marginBottom: anticipated > 0 ? '10px' : '0' }}>
-                  <div style={{ background: '#f5f5f5', borderRadius: '8px', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '10px', color: '#888', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Current</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', marginBottom: (posted > 0 || unposted > 0 || committed > 0) ? '10px' : '0' }}>
+                  <div style={{ background: '#EEF1F8', border: '1px solid #d0d8e8', borderRadius: '8px', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '10px', color: '#888', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Starting</div>
                     <div style={{ fontSize: '18px', fontWeight: '700' }}>{account.currentBalance.toLocaleString()}</div>
                   </div>
-                  {anticipated > 0 && (
+                  {posted > 0 && (
+                    <div style={{ background: '#EAF3DE', borderRadius: '8px', padding: '10px 12px' }}>
+                      <div style={{ fontSize: '10px', color: '#3B6D11', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Posted ✓</div>
+                      <div style={{ fontSize: '18px', fontWeight: '700', color: '#3B6D11' }}>+{posted.toLocaleString()}</div>
+                    </div>
+                  )}
+                  {unposted > 0 && (
                     <div style={{ background: '#E6F1FB', borderRadius: '8px', padding: '10px 12px' }}>
                       <div style={{ fontSize: '10px', color: '#185FA5', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Anticipated</div>
-                      <div style={{ fontSize: '18px', fontWeight: '700', color: '#185FA5' }}>+{anticipated.toLocaleString()}</div>
+                      <div style={{ fontSize: '18px', fontWeight: '700', color: '#185FA5' }}>+{unposted.toLocaleString()}</div>
                     </div>
                   )}
                   {committed > 0 && (
@@ -338,19 +374,26 @@ function PointsTab({ tripId, expenses = [] }) {
                       <div style={{ fontSize: '18px', fontWeight: '700', color: '#BA7517' }}>{committed.toLocaleString()}</div>
                     </div>
                   )}
-                  <div style={{ background: remaining < 0 ? '#FCEBEB' : '#EEF1F8', borderRadius: '8px', padding: '10px 12px' }}>
-                    <div style={{ fontSize: '10px', color: remaining < 0 ? '#A32D2D' : '#1B2A4A', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Remaining</div>
-                    <div style={{ fontSize: '18px', fontWeight: '700', color: remaining < 0 ? '#A32D2D' : '#1B2A4A' }}>{remaining.toLocaleString()}</div>
+                  <div style={{ background: available < 0 ? '#FCEBEB' : '#EEF1F8', borderRadius: '8px', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '10px', color: available < 0 ? '#A32D2D' : '#1B2A4A', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Available</div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: available < 0 ? '#A32D2D' : '#1B2A4A' }}>{available.toLocaleString()}</div>
+                    {unposted > 0 && <div style={{ fontSize: '10px', color: '#185FA5', marginTop: '2px' }}>+{unposted.toLocaleString()} anticipated</div>}
                   </div>
                 </div>
 
-                {/* Anticipated additions detail */}
+                {/* Credits detail — posted and anticipated */}
                 {account.anticipatedAdditions && account.anticipatedAdditions.length > 0 && (
                   <div style={{ marginTop: '10px', padding: '8px 12px', background: '#f0f4ff', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '600', color: '#185FA5', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Anticipated additions</div>
+                    <div style={{ fontSize: '11px', fontWeight: '600', color: '#185FA5', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Credits</div>
                     {account.anticipatedAdditions.map((item, idx) => (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#444', marginBottom: '3px' }}>
-                        <span>{item.description || 'Upcoming points'}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {item.posted
+                            ? <span style={{ fontSize: '10px', background: '#EAF3DE', color: '#3B6D11', padding: '1px 6px', borderRadius: '10px', fontWeight: '600' }}>Posted ✓</span>
+                            : <span style={{ fontSize: '10px', background: '#E6F1FB', color: '#185FA5', padding: '1px 6px', borderRadius: '10px', fontWeight: '600' }}>Anticipated</span>
+                          }
+                          {item.description || 'Points credit'}
+                        </span>
                         <span style={{ fontWeight: '600' }}>+{(item.amount || 0).toLocaleString()} {item.expectedDate ? '· ' + item.expectedDate : ''}</span>
                       </div>
                     ))}
@@ -421,6 +464,63 @@ function PointsTab({ tripId, expenses = [] }) {
                     </table>
                   </div>
                 )}
+              {/* Inline edit form */}
+              {inlineEditId === account._id && (
+                <div style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Program</label>
+                      <select value={form.program} onChange={e => setForm({ ...form, program: e.target.value })}
+                        style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                        {PROGRAMS.map(p => <option key={p} value={p} disabled={p.startsWith('──')}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Starting balance</label>
+                      <input type="number" value={form.currentBalance} onChange={e => setForm({ ...form, currentBalance: parseInt(e.target.value) || '' })}
+                        style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Balance as of date</label>
+                      <input type="date" value={form.balanceDate} onChange={e => setForm({ ...form, balanceDate: e.target.value })}
+                        style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: '500' }}>Credits (earned or anticipated)</label>
+                      <button onClick={addAnticipated}
+                        style={{ fontSize: '11px', padding: '3px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', cursor: 'pointer' }}>+ Add</button>
+                    </div>
+                    {form.anticipatedAdditions.map((item, idx) => (
+                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto auto', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                        <input type="number" value={item.amount} onChange={e => updateAnticipated(idx, 'amount', parseInt(e.target.value) || '')}
+                          placeholder="Points" style={{ padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        <input type="date" value={item.expectedDate} onChange={e => updateAnticipated(idx, 'expectedDate', e.target.value)}
+                          style={{ padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        <input value={item.description} onChange={e => updateAnticipated(idx, 'description', e.target.value)}
+                          placeholder="Description" style={{ padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#555', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          <input type="checkbox" checked={item.posted || false} onChange={e => updateAnticipated(idx, 'posted', e.target.checked)} />
+                          Posted
+                        </label>
+                        <button onClick={() => removeAnticipated(idx)}
+                          style={{ padding: '4px 8px', border: '1px solid #ffcccc', borderRadius: '6px', background: 'transparent', color: '#cc4444', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={handleSave}
+                      style={{ padding: '7px 18px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
+                      Save changes
+                    </button>
+                    <button onClick={() => { setInlineEditId(null); setEditingAccount(null); }}
+                      style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #ccc', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
               </div>
             );
           })}
