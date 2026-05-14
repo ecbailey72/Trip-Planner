@@ -384,62 +384,190 @@ function DashboardTab({ tripId, trip }) {
         );
       })()}
 
-      {/* Two column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '1.5rem' }}>
+      {/* Phase-specific sections */}
 
-        {/* Pre-trip checklist */}
-        <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Pre-trip checklist</div>
-          <div style={{ fontSize: '22px', fontWeight: '700', marginBottom: '6px' }}>{completedPreTrip} / {preTrip.length}</div>
-          <div style={{ height: '5px', background: '#ddd', borderRadius: '3px', marginBottom: '6px' }}>
-            <div style={{ height: '5px', borderRadius: '3px', background: taskPct === 100 ? '#1D9E75' : '#BA7517', width: taskPct + '%', transition: 'width 0.3s' }} />
+      {/* PLAN only — checklist + countdown */}
+      {isPlanning && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '1.5rem' }}>
+          <div style={{ background: 'white', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '14px 16px', boxShadow: '0 1px 4px rgba(27,42,74,0.06)' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Pre-trip checklist</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', marginBottom: '6px' }}>{completedPreTrip} / {preTrip.length}</div>
+            <div style={{ height: '5px', background: '#ddd', borderRadius: '3px', marginBottom: '6px' }}>
+              <div style={{ height: '5px', borderRadius: '3px', background: taskPct === 100 ? '#1A7A5C' : '#BA7517', width: taskPct + '%', transition: 'width 0.3s' }} />
+            </div>
+            <div style={{ fontSize: '12px', color: '#888' }}>{taskPct}% complete · {preTrip.length - completedPreTrip} remaining</div>
           </div>
-          <div style={{ fontSize: '12px', color: '#888' }}>{taskPct}% complete · {preTrip.length - completedPreTrip} remaining</div>
+          <div style={{ background: 'white', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '14px 16px', boxShadow: '0 1px 4px rgba(27,42,74,0.06)' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Countdown</div>
+            {cd ? (
+              <div style={{ fontSize: '20px', fontWeight: '700', color: cd.color }}>{cd.text}</div>
+            ) : (
+              <div style={{ fontSize: '13px', color: '#aaa' }}>Set trip dates to see countdown</div>
+            )}
+          </div>
         </div>
+      )}
 
-        {/* Daily spend */}
-        <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Daily spend</div>
-          {totalSpent > 0 ? (
-            <>
-              <div style={{ fontSize: '22px', fontWeight: '700', marginBottom: '4px', color: avgPerDay > dailyBudget ? '#BA7517' : '#1D9E75' }}>${avgPerDay}/day avg</div>
-              <div style={{ fontSize: '12px', color: '#888' }}>vs ${dailyBudget} budget · ${Math.round(totalSpent).toLocaleString()} total · {spendDays} days tracked</div>
-              {avgPerDay > dailyBudget && (
-                <div style={{ fontSize: '12px', color: '#BA7517', marginTop: '4px', fontWeight: '500' }}>⚠ ${avgPerDay - dailyBudget}/day over budget</div>
+      {/* GO only — today/tomorrow itinerary + daily spend */}
+      {isActive && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '1rem' }}>
+            <div style={{ background: 'white', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '14px 16px', boxShadow: '0 1px 4px rgba(27,42,74,0.06)' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Daily spend</div>
+              {totalSpent > 0 ? (
+                <>
+                  <div style={{ fontSize: '22px', fontWeight: '700', marginBottom: '4px', color: avgPerDay > dailyBudget ? '#BA7517' : '#1A7A5C' }}>${avgPerDay}/day avg</div>
+                  <div style={{ fontSize: '12px', color: '#888' }}>vs ${dailyBudget} budget · ${Math.round(totalSpent).toLocaleString()} total · {spendDays} days tracked</div>
+                  {avgPerDay > dailyBudget && (
+                    <div style={{ fontSize: '12px', color: '#BA7517', marginTop: '4px', fontWeight: '500' }}>⚠ ${avgPerDay - dailyBudget}/day over budget</div>
+                  )}
+                </>
+              ) : (
+                <div style={{ fontSize: '13px', color: '#aaa' }}>No spending tracked yet</div>
               )}
-            </>
-          ) : (
-            <div style={{ fontSize: '13px', color: '#aaa' }}>No spending tracked yet</div>
-          )}
+            </div>
+            <div style={{ background: 'white', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '14px 16px', boxShadow: '0 1px 4px rgba(27,42,74,0.06)' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Trip status</div>
+              {cd && <div style={{ fontSize: '18px', fontWeight: '700', color: cd.color }}>{cd.text}</div>}
+            </div>
+          </div>
+          {/* Today / Tomorrow itinerary */}
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>{showLabel}</div>
+            {showEvents.length > 0 ? (
+              <div style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '12px', padding: '0 1rem' }}>
+                {showEvents.slice(0, 6).map((event, idx) => (
+                  <div key={event._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: idx < Math.min(showEvents.length, 6) - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f0f0ed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
+                      {EVENT_ICONS[event.type] || '📌'}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a18' }}>{event.title}</div>
+                      {event.startTime && <div style={{ fontSize: '12px', color: '#888' }}>{event.startTime}{event.endTime ? ' → ' + event.endTime : ''}</div>}
+                    </div>
+                    {event.status === 'optional' && (
+                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '20px', background: '#f0f0f0', color: '#888', fontStyle: 'italic', flexShrink: 0 }}>optional</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px', color: '#aaa', fontSize: '13px' }}>
+                {events.length === 0 ? 'No itinerary events added yet.' : 'No events scheduled for today or tomorrow.'}
+              </div>
+            )}
+          </div>
         </div>
+      )}
+
+      {/* REMEMBER only — daily spend summary */}
+      {isComplete && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '1.5rem' }}>
+          <div style={{ background: 'white', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '14px 16px', boxShadow: '0 1px 4px rgba(27,42,74,0.06)' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Daily spend summary</div>
+            {totalSpent > 0 ? (
+              <>
+                <div style={{ fontSize: '22px', fontWeight: '700', marginBottom: '4px' }}>${avgPerDay}/day avg</div>
+                <div style={{ fontSize: '12px', color: '#888' }}>${Math.round(totalSpent).toLocaleString()} total · {spendDays} days tracked</div>
+              </>
+            ) : (
+              <div style={{ fontSize: '13px', color: '#aaa' }}>No daily spend recorded</div>
+            )}
+          </div>
+          <div style={{ background: 'white', border: '1px solid #E8E6E1', borderRadius: '12px', padding: '14px 16px', boxShadow: '0 1px 4px rgba(27,42,74,0.06)' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Post-trip checklist</div>
+            {(() => {
+              const postTrip = tasks.filter(t => t.phase === 'postTrip');
+              const completed = postTrip.filter(t => t.status === 'complete').length;
+              const pct = postTrip.length > 0 ? Math.round(completed / postTrip.length * 100) : 0;
+              return postTrip.length > 0 ? (
+                <>
+                  <div style={{ fontSize: '22px', fontWeight: '700', marginBottom: '6px' }}>{completed} / {postTrip.length}</div>
+                  <div style={{ height: '5px', background: '#ddd', borderRadius: '3px', marginBottom: '6px' }}>
+                    <div style={{ height: '5px', borderRadius: '3px', background: pct === 100 ? '#1A7A5C' : '#BA7517', width: pct + '%', transition: 'width 0.3s' }} />
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#888' }}>{pct}% complete</div>
+                </>
+              ) : <div style={{ fontSize: '13px', color: '#aaa' }}>No post-trip tasks added</div>;
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Quick links — all phases */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Quick links</div>
+        {[
+          {
+            category: '✈ Flights',
+            links: [
+              { label: 'Google Flights', url: 'https://flights.google.com' },
+              { label: 'Kayak', url: 'https://kayak.com' },
+              { label: 'Delta Airlines', url: 'https://delta.com' },
+              { label: 'American Airlines', url: 'https://aa.com' },
+              { label: 'United Airlines', url: 'https://united.com' },
+              { label: 'Flying Blue', url: 'https://flyingblue.com' },
+              { label: 'Seats.aero', url: 'https://seats.aero' },
+            ]
+          },
+          {
+            category: '🏨 Hotels & Stays',
+            links: [
+              { label: 'Google Hotels', url: 'https://google.com/travel/hotels' },
+              { label: 'Hotels.com', url: 'https://hotels.com' },
+              { label: 'Hilton', url: 'https://hilton.com' },
+              { label: 'Marriott', url: 'https://marriott.com' },
+              { label: 'Airbnb', url: 'https://airbnb.com' },
+              { label: 'VRBO', url: 'https://vrbo.com' },
+              { label: 'Expedia', url: 'https://expedia.com' },
+              { label: 'Booking.com', url: 'https://booking.com' },
+            ]
+          },
+          {
+            category: '🎟 Activities & Discovery',
+            links: [
+              { label: 'Viator', url: 'https://viator.com' },
+              { label: 'TripAdvisor', url: 'https://tripadvisor.com' },
+              { label: 'Google Maps', url: 'https://maps.google.com' },
+              { label: 'Rome2Rio', url: 'https://rome2rio.com' },
+            ]
+          },
+          {
+            category: '⭐ Points & Cards',
+            links: [
+              { label: 'Capital One', url: 'https://capitalone.com' },
+              { label: 'Amex', url: 'https://americanexpress.com' },
+              { label: 'Chase', url: 'https://chase.com' },
+              { label: 'Citi', url: 'https://citi.com' },
+              { label: 'The Points Guy', url: 'https://thepointsguy.com' },
+            ]
+          },
+          {
+            category: '🛠 Tools',
+            links: [
+              { label: 'XE Currency', url: 'https://xe.com' },
+            ]
+          },
+        ].map(group => (
+          <div key={group.category} style={{ marginBottom: '14px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#1B2A4A', letterSpacing: '0.05em', marginBottom: '7px' }}>{group.category}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {group.links.map(link => (
+                <a key={link.label} href={link.url} target="_blank" rel="noreferrer"
+                  style={{
+                    padding: '6px 12px', background: 'white',
+                    border: '1px solid #E8E6E1', borderRadius: '20px',
+                    fontSize: '12px', fontWeight: '500', color: '#1B2A4A',
+                    textDecoration: 'none', whiteSpace: 'nowrap'
+                  }}>
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Today / Tomorrow itinerary */}
-      <div>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>{showLabel}</div>
-        {showEvents.length > 0 ? (
-          <div style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '12px', padding: '0 1rem' }}>
-            {showEvents.slice(0, 6).map((event, idx) => (
-              <div key={event._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: idx < Math.min(showEvents.length, 6) - 1 ? '1px solid #f0f0f0' : 'none' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f0f0ed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
-                  {EVENT_ICONS[event.type] || '📌'}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a18' }}>{event.title}</div>
-                  {event.startTime && <div style={{ fontSize: '12px', color: '#888' }}>{event.startTime}{event.endTime ? ' → ' + event.endTime : ''}</div>}
-                </div>
-                {event.status === 'optional' && (
-                  <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '20px', background: '#f0f0f0', color: '#888', fontStyle: 'italic', flexShrink: 0 }}>optional</span>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px', color: '#aaa', fontSize: '13px' }}>
-            {events.length === 0 ? 'No itinerary events added yet.' : 'No events scheduled for today or tomorrow.'}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
