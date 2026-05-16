@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getUser, logout } from '../utils/auth';
 import axios from 'axios';
 
-const API = process.env.NODE_ENV === 'development' ? 'http://localhost:5001/api' : '/api';
+const API = 'http://localhost:5001/api';
 
 function TripsPage() {
   const [trips, setTrips] = useState([]);
@@ -10,6 +11,7 @@ function TripsPage() {
   const [loading, setLoading] = useState(true);
   const [newTrip, setNewTrip] = useState({ name: '', startDate: '', endDate: '', tripBudget: '', dailyBudget: '' });
   const navigate = useNavigate();
+  const user = getUser();
 
   useEffect(() => {
     fetchTrips();
@@ -82,11 +84,17 @@ function TripsPage() {
         <img src="/logo-horizontal.png" alt="Ventaro"
           style={{ height: '52px', width: 'auto', filter: 'brightness(0) invert(1)', cursor: 'pointer' }}
           onClick={() => navigate('/')} />
-        <button
-          onClick={() => setShowForm(true)}
-          style={{ background: '#C9A84C', border: 'none', color: '#111C33', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}>
-          + New Trip
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {user && <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Hi, {user.name.split(' ')[0]}</span>}
+          <button onClick={() => setShowForm(true)}
+            style={{ background: '#C9A84C', border: 'none', color: '#111C33', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}>
+            + New Trip
+          </button>
+          <button onClick={logout}
+            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}>
+            Sign out
+          </button>
+        </div>
       </nav>
 
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2.5rem 1rem' }}>

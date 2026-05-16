@@ -15,11 +15,11 @@ function LandingPage() {
       }}>
         <img src="/logo-horizontal.png" alt="Ventaro" style={{ height: '88px', width: 'auto', filter: 'brightness(0) invert(1)' }} />
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button onClick={() => navigate('/trips')}
+          <button onClick={() => navigate('/login')}
             style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '7px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
             Sign in
           </button>
-          <button onClick={() => navigate('/trips')}
+          <button onClick={() => navigate('/login')}
             style={{ background: '#C9A84C', border: 'none', color: '#111C33', padding: '7px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}>
             Get started
           </button>
@@ -74,7 +74,7 @@ function LandingPage() {
           flex: '0 0 auto', marginTop: 'auto', paddingBottom: '8vh'
         }}>
           <button
-            onClick={() => navigate('/trips')}
+            onClick={() => navigate('/login')}
             style={{
               background: '#C9A84C', color: '#111C33', border: 'none',
               padding: '14px 40px', borderRadius: '10px',
@@ -175,7 +175,7 @@ function LandingPage() {
         <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.7)', marginBottom: '2rem' }}>
           Join the adventure. Your next trip is waiting.
         </p>
-        <button onClick={() => navigate('/trips')}
+        <button onClick={() => navigate('/login')}
           style={{
             background: '#C9A84C', color: '#111C33', border: 'none',
             padding: '14px 40px', borderRadius: '10px',
