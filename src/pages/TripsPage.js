@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getUser, logout } from '../utils/auth';
 import axios from 'axios';
 
-const API = 'http://localhost:5001/api';
+const API = process.env.REACT_APP_API_URL || '/api';
 
 function TripsPage() {
   const [trips, setTrips] = useState([]);
