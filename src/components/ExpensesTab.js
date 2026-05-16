@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API = process.env.NODE_ENV === 'development' ? 'http://localhost:5001/api' : '/api';
+const API = process.env.REACT_APP_API_URL || '/api';
 
 const CATEGORIES = [
   'Flights', 'Lodging', 'Activities & Tours', 'Food & Dining',
