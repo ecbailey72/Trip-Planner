@@ -30,7 +30,7 @@ app.use('/api/auth', authRoutes);
 
 // ── TRIPS ─────────────────────────────────────────────────────────────
 app.get('/api/trips', authMiddleware, async (req, res) => {
-  try { res.json(await Trip.find({ userId: req.user.userId }).sort({ createdAt: -1 })); }
+  try { res.json(await Trip.find({ $or: [{ userId: req.user.userId }, { collaborators: req.user.userId }] }).sort({ createdAt: -1 })); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -55,6 +55,70 @@ app.put('/api/trips/:id', authMiddleware, async (req, res) => {
 app.delete('/api/trips/:id', authMiddleware, async (req, res) => {
   try { await Trip.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); }
   catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── SHARE TRIP ────────────────────────────────────────────────────────
+app.post('/api/trips/:id/share', authMiddleware, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+
+    const invitedUser = await User.findOne({ email: email.toLowerCase() });
+    if (!invitedUser) return res.status(404).json({ error: 'No Ventaro account found with that email' });
+
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({ error: 'Trip not found' });
+
+    // Check requester owns the trip
+    if (trip.userId.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'Only the trip owner can share it' });
+    }
+
+    // Check not already a collaborator
+    if (trip.collaborators.map(c => c.toString()).includes(invitedUser._id.toString())) {
+      return res.status(400).json({ error: 'This person already has access' });
+    }
+
+    // Don't add owner as collaborator
+    if (trip.userId.toString() === invitedUser._id.toString()) {
+      return res.status(400).json({ error: 'This person already owns the trip' });
+    }
+
+    trip.collaborators.push(invitedUser._id);
+    await trip.save();
+
+    res.json({ message: `Trip shared with ${invitedUser.name}`, collaborator: { id: invitedUser._id, name: invitedUser.name, email: invitedUser.email } });
+  } catch (err) {
+    console.error('Share error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get trip collaborators
+app.get('/api/trips/:id/collaborators', authMiddleware, async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id).populate('collaborators', 'name email');
+    if (!trip) return res.status(404).json({ error: 'Trip not found' });
+    res.json(trip.collaborators);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Remove collaborator
+app.delete('/api/trips/:id/collaborators/:userId', authMiddleware, async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({ error: 'Trip not found' });
+    if (trip.userId.toString() !== req.user.userId) {
+      return res.status(403).json({ error: 'Only the trip owner can remove collaborators' });
+    }
+    trip.collaborators = trip.collaborators.filter(c => c.toString() !== req.params.userId);
+    await trip.save();
+    res.json({ message: 'Collaborator removed' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── EXPENSES ──────────────────────────────────────────────────────────

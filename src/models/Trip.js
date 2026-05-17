@@ -10,6 +10,7 @@ const tripSchema = new mongoose.Schema({
   dailyBudget: { type: Number, default: 200 },
   cppBenchmark: { type: Number, default: 1.5 },
   baseCurrency: { type: String, default: 'USD' },
+  collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true, strict: false });
 
 module.exports = mongoose.model('Trip', tripSchema);

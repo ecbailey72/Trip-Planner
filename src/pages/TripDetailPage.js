@@ -28,10 +28,15 @@ function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editingTrip, setEditingTrip] = useState(false);
   const [tripForm, setTripForm] = useState({});
+  const [showShare, setShowShare] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
+  const [collaborators, setCollaborators] = useState([]);
 
   useEffect(() => {
     fetchTrip();
     fetchExpenses();
+    fetchCollaborators();
   }, [id]);
 
   const fetchExpenses = async () => {
@@ -40,6 +45,27 @@ function TripDetailPage() {
       setExpenses(res.data);
     } catch (err) {
       console.error('Error fetching expenses:', err);
+    }
+  };
+
+  const fetchCollaborators = async () => {
+    try {
+      const res = await axios.get(`${API}/trips/${id}/collaborators`);
+      setCollaborators(res.data);
+    } catch (err) {
+      console.error('Error fetching collaborators:', err);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!shareEmail) return;
+    try {
+      const res = await axios.post(`${API}/trips/${id}/share`, { email: shareEmail });
+      setShareMessage(`✓ Trip shared with ${res.data.collaborator.name}`);
+      setShareEmail('');
+      fetchCollaborators();
+    } catch (err) {
+      setShareMessage(`✗ ${err.response?.data?.error || 'Failed to share trip'}`);
     }
   };
 
@@ -145,22 +171,78 @@ function TripDetailPage() {
               )}
             </div>
 
-            {/* Right — edit */}
-            <div style={{ flexShrink: 0 }}>
-              <button
-                onClick={() => {
-                  setTripForm({
-                    name: trip.name, startDate: trip.startDate || '', endDate: trip.endDate || '',
-                    tripBudget: trip.tripBudget || '', dailyBudget: trip.dailyBudget || '',
-                    status: trip.status, cppBenchmark: trip.cppBenchmark || 1.5
-                  });
-                  setEditingTrip(true);
-                }}
-                style={{ background: 'rgba(201,168,76,0.25)', border: '1px solid rgba(201,168,76,0.5)', color: '#C9A84C', cursor: 'pointer', fontSize: '12px', padding: '5px 12px', borderRadius: '6px' }}>
-                Edit trip
-              </button>
+            {/* Right — share + edit */}
+            <div style={{ flexShrink: 0, display: 'flex', gap: '8px', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => { setShowShare(!showShare); setShareMessage(''); }}
+                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer', fontSize: '12px', padding: '5px 12px', borderRadius: '6px' }}>
+                  👥 Share
+                </button>
+                <button
+                  onClick={() => {
+                    setTripForm({
+                      name: trip.name, startDate: trip.startDate || '', endDate: trip.endDate || '',
+                      tripBudget: trip.tripBudget || '', dailyBudget: trip.dailyBudget || '',
+                      status: trip.status, cppBenchmark: trip.cppBenchmark || 1.5
+                    });
+                    setEditingTrip(true);
+                  }}
+                  style={{ background: 'rgba(201,168,76,0.25)', border: '1px solid rgba(201,168,76,0.5)', color: '#C9A84C', cursor: 'pointer', fontSize: '12px', padding: '5px 12px', borderRadius: '6px' }}>
+                  Edit trip
+                </button>
+              </div>
+              {collaborators.length > 0 && (
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+                  Shared with: {collaborators.map(c => c.name).join(', ')}
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Share trip panel */}
+          {showShare && (
+            <div style={{ marginTop: '12px', background: 'rgba(0,0,0,0.15)', borderRadius: '10px', padding: '14px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'white', marginBottom: '10px' }}>Share this trip</div>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input
+                  type="email" value={shareEmail}
+                  onChange={e => setShareEmail(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleShare()}
+                  placeholder="Enter their Ventaro email address"
+                  style={{ flex: 1, padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
+                <button onClick={handleShare}
+                  style={{ padding: '7px 16px', background: '#C9A84C', color: '#111C33', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
+                  Invite
+                </button>
+                <button onClick={() => { setShowShare(false); setShareMessage(''); }}
+                  style={{ padding: '7px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', color: 'white' }}>
+                  Cancel
+                </button>
+              </div>
+              {shareMessage && (
+                <div style={{ fontSize: '12px', color: shareMessage.startsWith('✓') ? '#C9A84C' : '#ff8888', marginTop: '4px' }}>
+                  {shareMessage}
+                </div>
+              )}
+              {collaborators.length > 0 && (
+                <div style={{ marginTop: '10px' }}>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Currently shared with</div>
+                  {collaborators.map(c => (
+                    <div key={c._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.8)', marginBottom: '4px' }}>
+                      <span>{c.name} · {c.email}</span>
+                      <button onClick={async () => {
+                        await axios.delete(`${API}/trips/${id}/collaborators/${c._id}`);
+                        fetchCollaborators();
+                      }} style={{ fontSize: '11px', padding: '2px 8px', border: '1px solid rgba(255,100,100,0.4)', borderRadius: '4px', background: 'transparent', color: 'rgba(255,100,100,0.8)', cursor: 'pointer' }}>
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Edit trip form */}
           {editingTrip && (
