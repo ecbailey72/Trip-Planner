@@ -35,6 +35,8 @@ function LoginPage() {
   const handleRegister = async () => {
     setError('');
     if (!registerForm.name || !registerForm.email || !registerForm.password) return setError('Name, email and password are required.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registerForm.email)) return setError('Please enter a valid email address.');
     if (registerForm.password.length < 8) return setError('Password must be at least 8 characters.');
     if (registerForm.password !== registerForm.confirmPassword) return setError('Passwords do not match.');
     setLoading(true);

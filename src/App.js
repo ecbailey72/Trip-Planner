@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import './styles/ventaro.css';
 import { setupAxiosAuth, isLoggedIn } from './utils/auth';
 import LandingPage from './pages/LandingPage';
+import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import TripsPage from './pages/TripsPage';
 import TripDetailPage from './pages/TripDetailPage';
@@ -29,6 +30,9 @@ function App() {
         } />
         <Route path="/trips/:id" element={
           <ProtectedRoute><TripDetailPage /></ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute><ProfilePage /></ProtectedRoute>
         } />
       </Routes>
     </div>

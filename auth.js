@@ -14,6 +14,11 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Name, email and password are required' });
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address' });
+    }
+
     if (password.length < 8) {
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
@@ -94,6 +99,50 @@ router.get('/me', async (req, res) => {
     res.json({ user: { id: user._id, name: user.name, email: user.email, tier: user.tier } });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// ── UPDATE PROFILE ────────────────────────────────────────────────────
+router.put('/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Authentication required' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { name, email, currentPassword, newPassword } = req.body;
+
+    // If changing email or password, verify current password
+    if (email || newPassword) {
+      if (!currentPassword) return res.status(400).json({ error: 'Current password required' });
+      const isMatch = await user.comparePassword(currentPassword);
+      if (!isMatch) return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    if (name) user.name = name;
+
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) return res.status(400).json({ error: 'Please enter a valid email address' });
+      const existing = await User.findOne({ email: email.toLowerCase() });
+      if (existing && existing._id.toString() !== user._id.toString()) {
+        return res.status(400).json({ error: 'That email is already in use' });
+      }
+      user.email = email.toLowerCase();
+    }
+
+    if (newPassword) {
+      if (newPassword.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+      user.password = newPassword;
+    }
+
+    await user.save();
+    res.json({ name: user.name, email: user.email });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 

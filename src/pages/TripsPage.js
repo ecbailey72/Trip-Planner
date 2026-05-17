@@ -85,7 +85,7 @@ function TripsPage() {
           style={{ height: '52px', width: 'auto', filter: 'brightness(0) invert(1)', cursor: 'pointer' }}
           onClick={() => navigate('/')} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {user && <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Hi, {user.name.split(' ')[0]}</span>}
+          {user && <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/profile')}>Hi, {user.name.split(' ')[0]}</span>}
           <button onClick={() => setShowForm(true)}
             style={{ background: '#C9A84C', border: 'none', color: '#111C33', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}>
             + New Trip
