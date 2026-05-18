@@ -36,7 +36,7 @@ app.get('/api/trips', authMiddleware, async (req, res) => {
 
 app.get('/api/trips/:id', authMiddleware, async (req, res) => {
   try {
-    const trip = await Trip.findById(req.params.id);
+    const trip = await Trip.findById(req.params.id).populate('userId', 'name email');
     if (!trip) return res.status(404).json({ error: 'Trip not found' });
     res.json(trip);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -90,6 +90,19 @@ app.post('/api/trips/:id/share', authMiddleware, async (req, res) => {
     res.json({ message: `Trip shared with ${invitedUser.name}`, collaborator: { id: invitedUser._id, name: invitedUser.name, email: invitedUser.email } });
   } catch (err) {
     console.error('Share error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get trip owner
+app.get('/api/trips/:id/owner', authMiddleware, async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({ error: 'Trip not found' });
+    const owner = await User.findById(trip.userId).select('name email');
+    if (!owner) return res.status(404).json({ error: 'Owner not found' });
+    res.json({ name: owner.name, email: owner.email, id: owner._id });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

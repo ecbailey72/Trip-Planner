@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { getUser } from '../utils/auth';
 import axios from 'axios';
 import ExpensesTab from '../components/ExpensesTab';
 import ItineraryTab from '../components/ItineraryTab';
@@ -14,6 +15,7 @@ const API = process.env.REACT_APP_API_URL || '/api';
 function TripDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const currentUser = getUser();
   const location = useLocation();
 
   const getTabFromHash = () => {
@@ -28,15 +30,26 @@ function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editingTrip, setEditingTrip] = useState(false);
   const [tripForm, setTripForm] = useState({});
+  const [ownerName, setOwnerName] = useState('');
   const [showShare, setShowShare] = useState(false);
   const [shareEmail, setShareEmail] = useState('');
   const [shareMessage, setShareMessage] = useState('');
   const [collaborators, setCollaborators] = useState([]);
 
+  const fetchOwner = async () => {
+    try {
+      const res = await axios.get(`${API}/trips/${id}/owner`);
+      if (res.data.id !== currentUser?.id) {
+        setOwnerName(res.data.name);
+      }
+    } catch (err) {}
+  };
+
   useEffect(() => {
     fetchTrip();
     fetchExpenses();
     fetchCollaborators();
+    fetchOwner();
   }, [id]);
 
   const fetchExpenses = async () => {
@@ -68,6 +81,8 @@ function TripDetailPage() {
       setShareMessage(`✗ ${err.response?.data?.error || 'Failed to share trip'}`);
     }
   };
+
+
 
   const fetchTrip = async () => {
     try {
@@ -192,9 +207,14 @@ function TripDetailPage() {
                   Edit trip
                 </button>
               </div>
-              {collaborators.length > 0 && (
+              {collaborators.length > 0 && trip?.userId?._id === currentUser?.id && (
                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
                   Shared with: {collaborators.map(c => c.name).join(', ')}
+                </div>
+              )}
+              {trip?.userId?._id !== currentUser?.id && trip?.userId?.name && (
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+                  Shared with you by {trip.userId.name}
                 </div>
               )}
             </div>
