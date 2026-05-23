@@ -24,6 +24,7 @@ const Task = require('./src/models/Task');
 const DailySpend = require('./src/models/DailySpend');
 const JournalEntry = require('./src/models/JournalEntry');
 const PointsAccount = require('./src/models/PointsAccount');
+const CppAnalysis = require('./src/models/CppAnalysis');
 
 // ── AUTH ROUTES ───────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
@@ -266,6 +267,27 @@ app.put('/api/trips/:tripId/points/:id', authMiddleware, async (req, res) => {
 
 app.delete('/api/trips/:tripId/points/:id', authMiddleware, async (req, res) => {
   try { await PointsAccount.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── CPP ANALYSES ──────────────────────────────────────────────────────
+app.get('/api/trips/:tripId/cpp', authMiddleware, async (req, res) => {
+  try { res.json(await CppAnalysis.find({ tripId: req.params.tripId }).sort({ createdAt: -1 })); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/trips/:tripId/cpp', authMiddleware, async (req, res) => {
+  try { res.json(await new CppAnalysis({ ...req.body, tripId: req.params.tripId }).save()); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/trips/:tripId/cpp/:id', authMiddleware, async (req, res) => {
+  try { res.json(await CppAnalysis.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/trips/:tripId/cpp/:id', authMiddleware, async (req, res) => {
+  try { await CppAnalysis.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 

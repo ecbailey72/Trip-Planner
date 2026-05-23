@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { getUser } from '../utils/auth';
 import axios from 'axios';
 import ExpensesTab from '../components/ExpensesTab';
 import ItineraryTab from '../components/ItineraryTab';
@@ -9,13 +8,13 @@ import DailySpendTab from '../components/DailySpendTab';
 import JournalTab from '../components/JournalTab';
 import PointsTab from '../components/PointsTab';
 import DashboardTab from '../components/DashboardTab';
+import ToolsTab from '../components/ToolsTab';
 
 const API = process.env.REACT_APP_API_URL || '/api';
 
 function TripDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const currentUser = getUser();
   const location = useLocation();
 
   const getTabFromHash = () => {
@@ -30,26 +29,15 @@ function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editingTrip, setEditingTrip] = useState(false);
   const [tripForm, setTripForm] = useState({});
-  const [ownerName, setOwnerName] = useState('');
   const [showShare, setShowShare] = useState(false);
   const [shareEmail, setShareEmail] = useState('');
   const [shareMessage, setShareMessage] = useState('');
   const [collaborators, setCollaborators] = useState([]);
 
-  const fetchOwner = async () => {
-    try {
-      const res = await axios.get(`${API}/trips/${id}/owner`);
-      if (res.data.id !== currentUser?.id) {
-        setOwnerName(res.data.name);
-      }
-    } catch (err) {}
-  };
-
   useEffect(() => {
     fetchTrip();
     fetchExpenses();
     fetchCollaborators();
-    fetchOwner();
   }, [id]);
 
   const fetchExpenses = async () => {
@@ -81,8 +69,6 @@ function TripDetailPage() {
       setShareMessage(`✗ ${err.response?.data?.error || 'Failed to share trip'}`);
     }
   };
-
-
 
   const fetchTrip = async () => {
     try {
@@ -116,7 +102,7 @@ function TripDetailPage() {
   if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
   if (!trip) return <div style={{ padding: '2rem' }}>Trip not found.</div>;
 
-  const tabs = ['Dashboard', 'Expenses', 'Itinerary', 'Daily Spend', 'Checklist', 'Journal', 'Points'];
+  const tabs = ['Dashboard', 'Expenses', 'Itinerary', 'Daily Spend', 'Checklist', 'Journal', 'Points', 'Tools'];
 
   const tabSubtitle = (tab) => {
     const phase = trip.status || 'planning';
@@ -129,6 +115,7 @@ function TripDetailPage() {
         'Checklist': 'Pre-trip tasks to complete',
         'Journal': 'Ready for your notes',
         'Points': 'Plan your points strategy',
+        'Tools': 'CPP analyzer & more',
       },
       active: {
         'Dashboard': "Today's overview",
@@ -138,6 +125,7 @@ function TripDetailPage() {
         'Checklist': 'Tasks to do on the trip',
         'Journal': 'Capture memories now',
         'Points': 'Track redemptions',
+        'Tools': 'Planning tools',
       },
       complete: {
         'Dashboard': 'Trip summary & analysis',
@@ -147,6 +135,7 @@ function TripDetailPage() {
         'Checklist': 'Post-trip follow-ups',
         'Journal': 'Your travel memories',
         'Points': 'Points performance',
+        'Tools': 'Analysis tools',
       }
     };
     return subtitles[phase]?.[tab] || '';
@@ -207,14 +196,9 @@ function TripDetailPage() {
                   Edit trip
                 </button>
               </div>
-              {collaborators.length > 0 && trip?.userId?._id === currentUser?.id && (
+              {collaborators.length > 0 && (
                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
                   Shared with: {collaborators.map(c => c.name).join(', ')}
-                </div>
-              )}
-              {trip?.userId?._id !== currentUser?.id && trip?.userId?.name && (
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
-                  Shared with you by {trip.userId.name}
                 </div>
               )}
             </div>
@@ -356,6 +340,7 @@ function TripDetailPage() {
         {activeTab === 'checklist' && <ChecklistTab tripId={id} tripStartDate={trip.startDate} />}
         {activeTab === 'journal' && <JournalTab tripId={id} />}
         {activeTab === 'points' && <PointsTab tripId={id} expenses={expenses} />}
+        {activeTab === 'tools' && <ToolsTab trip={trip} tripId={id} />}
       </div>
 
     </div>
