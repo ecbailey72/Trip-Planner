@@ -23,6 +23,7 @@ const EVENT_TYPES = {
 };
 
 const STATUS_OPTIONS = [
+  { value: 'placeholder', label: 'Placeholder / tentative' },
   { value: 'prepaid',   label: 'Confirmed & prepaid' },
   { value: 'payOnSite', label: 'Confirmed & pay on site' },
   { value: 'optional',  label: 'Optional' },
@@ -138,8 +139,8 @@ function ItineraryTab({ tripId }) {
   const sortedDates = Object.keys(groupedEvents).sort();
   const displayDates = activeDay === 'all' ? sortedDates : sortedDates.filter(d => d === activeDay);
 
-  const statusColor = (s) => ({ prepaid: '#1B2A4A', payOnSite: '#185FA5', optional: '#888' }[s] || '#888');
-  const statusLabel = (s) => ({ prepaid: 'Prepaid', payOnSite: 'Pay on site', optional: 'Optional' }[s] || s);
+  const statusColor = (s) => ({ placeholder: '#BA7517', prepaid: '#1B2A4A', payOnSite: '#185FA5', optional: '#888' }[s] || '#888');
+  const statusLabel = (s) => ({ placeholder: 'Placeholder', prepaid: 'Prepaid', payOnSite: 'Pay on site', optional: 'Optional' }[s] || s);
 
   const formatDate = (dateStr) => {
     const d = new Date(dateStr + 'T12:00:00');
@@ -177,7 +178,7 @@ function ItineraryTab({ tripId }) {
       </div>
 
       {/* Event form */}
-      {showForm && !inlineFormDay && !inlineEditId && (
+      {showForm && !inlineFormDay && (
         <div style={{ background: '#f5f5f5', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
           <h3 style={{ marginBottom: '1rem', fontSize: '16px', fontWeight: '600' }}>{editingEvent ? 'Edit Event' : 'New Event'}</h3>
 

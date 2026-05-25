@@ -102,7 +102,7 @@ function TripDetailPage() {
   if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
   if (!trip) return <div style={{ padding: '2rem' }}>Trip not found.</div>;
 
-  const tabs = ['Dashboard', 'Itinerary', 'Expenses', 'Points', 'Daily Spend', 'Checklist', 'Journal', 'Tools'];
+  const tabs = ['Dashboard', 'Expenses', 'Itinerary', 'Daily Spend', 'Checklist', 'Journal', 'Points', 'Tools'];
 
   const tabSubtitle = (tab) => {
     const phase = trip.status || 'planning';
@@ -268,9 +268,10 @@ function TripDetailPage() {
                     style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Total trip budget ($)</label>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Total trip value ($)</label>
                   <input type="number" value={tripForm.tripBudget || ''} onChange={e => setTripForm({ ...tripForm, tripBudget: parseFloat(e.target.value) || '' })}
-                    placeholder="e.g. 12000" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
+                    placeholder="e.g. 25000" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginTop: '3px' }}>Include full value of flights, hotels & activities — even those covered by points. Points redemptions are a form of currency, not a discount.</div>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Daily spend budget ($)</label>

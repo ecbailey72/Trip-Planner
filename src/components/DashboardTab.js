@@ -202,7 +202,7 @@ function DashboardTab({ tripId, trip }) {
         <div style={{ background: budgetRemaining < 0 ? '#FCEBEB' : budgetPct > 85 ? '#FAEEDA' : '#E1F5EE', borderRadius: '12px', padding: '16px 20px', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
             <div>
-              <div style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75', marginBottom: '3px' }}>Trip budget</div>
+              <div style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75', marginBottom: '3px' }}>Trip value</div>
               <div style={{ fontSize: '28px', fontWeight: '800', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75' }}>
                 ${Math.round(budgetRemaining >= 0 ? budgetRemaining : Math.abs(budgetRemaining)).toLocaleString()}
                 <span style={{ fontSize: '14px', fontWeight: '400', marginLeft: '6px' }}>{budgetRemaining >= 0 ? 'remaining' : 'over budget'}</span>
@@ -210,15 +210,33 @@ function DashboardTab({ tripId, trip }) {
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '13px', color: '#555' }}>${Math.round(budgetConsumed).toLocaleString()} committed</div>
-              <div style={{ fontSize: '13px', color: '#888' }}>of ${tripBudget.toLocaleString()} total budget</div>
+              <div style={{ fontSize: '13px', color: '#888' }}>of ${tripBudget.toLocaleString()} total trip value</div>
             </div>
           </div>
           <div style={{ height: '8px', background: 'rgba(0,0,0,0.1)', borderRadius: '4px' }}>
             <div style={{ height: '8px', borderRadius: '4px', width: budgetPct + '%', background: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75', transition: 'width 0.4s' }} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: '#666' }}>
-            <span>Cash: ${Math.round(cashPaid + cashOwed).toLocaleString()} · Points: ${Math.round(pointsCommittedValue).toLocaleString()} · Credits: ${Math.round(creditsCommitted).toLocaleString()} · Planned: ${Math.round(plannedTotal).toLocaleString()}</span>
-            <span style={{ fontWeight: '600' }}>{budgetPct}%</span>
+          <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '6px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
+              <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Covered by points</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1D9E75' }}>${Math.round(pointsCommittedValue).toLocaleString()}</div>
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round(pointsCommittedValue / tripBudget * 100)}% of trip value</div>}
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
+              <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Credits applied</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#185FA5' }}>${Math.round(creditsValue).toLocaleString()}</div>
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round(creditsValue / tripBudget * 100)}% of trip value</div>}
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
+              <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Cash out of pocket</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1B2A4A' }}>${Math.round(cashPaid + cashOwed).toLocaleString()}</div>
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round((cashPaid + cashOwed) / tripBudget * 100)}% of trip value</div>}
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
+              <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Still to plan</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#BA7517' }}>${Math.round(plannedTotal + Math.max(0, budgetRemaining)).toLocaleString()}</div>
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{budgetPct}% committed</div>}
+            </div>
           </div>
         </div>
       )}
@@ -226,7 +244,7 @@ function DashboardTab({ tripId, trip }) {
       {/* No budget set prompt */}
       {!tripBudget && (
         <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 18px', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: '13px', color: '#888' }}>No trip budget set — add one to track spending against your ceiling.</div>
+          <div style={{ fontSize: '13px', color: '#888' }}>No trip value set — add the total value of your trip (including points-covered expenses) to track your budget.</div>
         </div>
       )}
 
@@ -234,20 +252,16 @@ function DashboardTab({ tripId, trip }) {
 
       {/* Financial summary */}
       {(!isComplete || showPlanningView) && <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Financials</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>{isComplete ? 'Cash Summary' : 'Cash Planning'}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
           {[
-            { label: 'Trip value', value: '$' + Math.round(totalValue + plannedTotal).toLocaleString(), color: '#1a1a18' },
-            { label: 'Points covering', value: '$' + Math.round(ptsValue).toLocaleString(), subtext: (totalValue + plannedTotal) > 0 ? Math.round(ptsValue / (totalValue + plannedTotal) * 100) + '% of trip value' : null, color: '#1D9E75', bg: '#E1F5EE' },
-            { label: 'Credits applied', value: '$' + Math.round(creditsValue).toLocaleString(), color: '#185FA5', bg: '#E6F1FB' },
-            { label: 'Cash paid', value: '$' + Math.round(cashPaid).toLocaleString(), color: '#1D9E75', bg: '#E1F5EE' },
-            { label: 'Cash still owed', value: '$' + Math.round(cashOwed).toLocaleString(), color: '#BA7517', bg: '#FAEEDA' },
-            { label: 'Cash to set aside', value: '$' + Math.round(netCashNeeded).toLocaleString(), color: '#A32D2D', bg: '#FCEBEB' },
+            { label: 'Cash still owed', value: '$' + Math.round(cashOwed).toLocaleString(), color: '#BA7517', bg: '#FAEEDA', hint: 'Confirmed expenses not yet paid' },
+            { label: 'Cash to set aside', value: '$' + Math.round(netCashNeeded).toLocaleString(), color: '#A32D2D', bg: '#FCEBEB', hint: 'Owed + all remaining cash expenses' },
           ].map(m => (
             <div key={m.label} style={{ background: m.bg || '#f5f5f5', borderRadius: '10px', padding: '10px 12px' }}>
               <div style={{ fontSize: '10px', color: m.color, marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, lineHeight: 1.3 }}>{m.label}</div>
               <div style={{ fontSize: '16px', fontWeight: '700', color: m.color }}>{m.value}</div>
-              {m.subtext && <div style={{ fontSize: '9px', color: m.color, opacity: 0.75, marginTop: '2px', textAlign: 'right' }}>{m.subtext}</div>}
+              {m.hint && <div style={{ fontSize: '9px', color: m.color, opacity: 0.75, marginTop: '2px' }}>{m.hint}</div>}
             </div>
           ))}
         </div>
