@@ -80,7 +80,7 @@ const emptyOption = (mode, idx) => ({
   payments: [emptyPayment()],
 });
 
-function CPPAnalyzer({ benchmark = BENCHMARK_DEFAULT, tripId, initialData, savedId, onSaved, onClose }) {
+function CPPAnalyzer({ benchmark = BENCHMARK_DEFAULT, tripId, initialData, savedId, onSaved, onClose, savedAnalyses, onLoadAnalysis, onDeleteAnalysis }) {
   const [mode, setMode] = useState(initialData?.mode || 'flight');
   const [saveName, setSaveName] = useState(initialData?.name || '');
   const [saving, setSaving] = useState(false);
@@ -140,11 +140,45 @@ function CPPAnalyzer({ benchmark = BENCHMARK_DEFAULT, tripId, initialData, saved
       if (cpp) allResults.push({ optDesc: opt.description || `Option ${options.indexOf(opt) + 1}`, pmtLabel: pmt.label || `Payment ${pidx + 1}`, cpp, cashPrice: opt.cashPrice, nights: opt.nights, points: pmt.points, fees: pmt.fees });
     });
   });
-  allResults.sort((a, b) => b.cpp - a.cpp || a.fees - b.fees);
+  allResults.sort((a, b) => b.cpp - a.cpp);
   const best = allResults[0];
 
   return (
     <div>
+      {/* Saved analyses — shown at top of CPP tool */}
+      {savedAnalyses && savedAnalyses.length > 0 && !initialData && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: '#8A9AB5', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+            Saved analyses
+          </div>
+          {savedAnalyses.map(analysis => (
+            <div key={analysis._id} style={{ background: 'white', border: '1px solid #E8E6E1', borderRadius: '10px', padding: '10px 14px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1B2A4A' }}>
+                  {analysis.mode === 'flight' ? '✈' : '🏨'} {analysis.name}
+                </div>
+                <div style={{ fontSize: '11px', color: '#8A9AB5', marginTop: '2px' }}>
+                  {analysis.options?.length} option{analysis.options?.length !== 1 ? 's' : ''} · saved {new Date(analysis.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={() => onLoadAnalysis && onLoadAnalysis(analysis)}
+                  style={{ fontSize: '12px', padding: '4px 10px', border: '1px solid #E8E6E1', borderRadius: '6px', background: 'transparent', color: '#1B2A4A', cursor: 'pointer' }}>
+                  Load
+                </button>
+                <button onClick={() => onDeleteAnalysis && onDeleteAnalysis(analysis._id)}
+                  style={{ fontSize: '12px', padding: '4px 8px', border: '1px solid #ffcccc', borderRadius: '6px', background: 'transparent', color: '#cc4444', cursor: 'pointer' }}>
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+          <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '12px', marginTop: '4px' }}>
+            <div style={{ fontSize: '12px', color: '#8A9AB5', marginBottom: '12px' }}>— or start a new analysis below —</div>
+          </div>
+        </div>
+      )}
+
       <div style={{ fontSize: '13px', color: '#8A9AB5', marginBottom: '1.25rem' }}>
         Add multiple {mode === 'flight' ? 'flight' : 'hotel'} options, then add payment methods for each.
         Your benchmark is <strong style={{ color: '#1B2A4A' }}>{benchmark} cpp</strong>.
@@ -387,10 +421,13 @@ function ToolsTab({ trip, tripId }) {
       phases: ['planning', 'active'],
       component: editingAnalysis
         ? <CPPAnalyzer benchmark={benchmark} tripId={tripId} initialData={editingAnalysis} savedId={editingAnalysis._id}
-            onSaved={() => { fetchAnalyses(); setEditingAnalysis(null); setActiveTool(null); }}
-            onClose={() => { setEditingAnalysis(null); setActiveTool(null); }} />
+            onSaved={() => { fetchAnalyses(); setEditingAnalysis(null); }}
+            onClose={() => setEditingAnalysis(null)} />
         : <CPPAnalyzer benchmark={benchmark} tripId={tripId}
-            onSaved={() => { fetchAnalyses(); setActiveTool(null); }} />,
+            savedAnalyses={savedAnalyses}
+            onLoadAnalysis={(analysis) => setEditingAnalysis(analysis)}
+            onDeleteAnalysis={async (id) => { await handleDelete(id); fetchAnalyses(); }}
+            onSaved={() => fetchAnalyses()} />,
     },
     {
       id: 'packing',
@@ -431,36 +468,7 @@ function ToolsTab({ trip, tripId }) {
             Planning tools to help you make smarter decisions for this trip.
           </div>
 
-          {/* Saved analyses */}
-          {savedAnalyses.length > 0 && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ fontSize: '12px', fontWeight: '700', color: '#8A9AB5', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
-                Saved analyses
-              </div>
-              {savedAnalyses.map(analysis => (
-                <div key={analysis._id} style={{ background: 'white', border: '1px solid #E8E6E1', borderRadius: '10px', padding: '12px 16px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1B2A4A' }}>
-                      {analysis.mode === 'flight' ? '✈' : '🏨'} {analysis.name}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#8A9AB5', marginTop: '2px' }}>
-                      {analysis.options?.length} option{analysis.options?.length !== 1 ? 's' : ''} · saved {new Date(analysis.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => { setEditingAnalysis(analysis); setActiveTool('cpp'); }}
-                      style={{ fontSize: '12px', padding: '5px 12px', border: '1px solid #E8E6E1', borderRadius: '6px', background: 'transparent', color: '#1B2A4A', cursor: 'pointer' }}>
-                      Open
-                    </button>
-                    <button onClick={() => handleDelete(analysis._id)}
-                      style={{ fontSize: '12px', padding: '5px 10px', border: '1px solid #ffcccc', borderRadius: '6px', background: 'transparent', color: '#cc4444', cursor: 'pointer' }}>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
             {tools.map(tool => (
               <div key={tool.id} onClick={() => setActiveTool(tool.id)}

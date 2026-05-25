@@ -234,7 +234,7 @@ function PointsTab({ tripId, expenses = [] }) {
       <div style={{ background: '#E6F1FB', borderRadius: '10px', padding: '12px 16px', marginBottom: '1.5rem', borderLeft: '4px solid #185FA5' }}>
         <div style={{ fontSize: '12px', fontWeight: '600', color: '#185FA5', marginBottom: '5px' }}>How to use this points tool</div>
         <div style={{ fontSize: '12px', color: '#333', lineHeight: 1.6 }}>
-          Enter your <strong>starting balance</strong> when you begin planning — this is a snapshot, not a live tracker. Point redemptions entered in the Expenses tab automatically deduct from your available balance. Use the <strong>Credits</strong> section to record any additional points you earn or expect — check <strong>Posted</strong> if the points are already in your account, or leave unchecked if they're anticipated but not yet posted. Don't include speculative earnings.
+          The Points tab works hand-in-hand with the <strong>Expenses tab</strong>. When you add a points payment to any expense, it automatically appears here as <strong>committed spend</strong>.<br/><br/>Enter your <strong>starting balance</strong> as a planning snapshot — this is not a live tracker. Update it manually if your balance changes significantly.<br/><br/>Use the <strong>Credits</strong> section to record points you have earned or expect:<ul><li>Check <strong>Posted ✓</strong> if already in your account</li><li>Leave unchecked if anticipated but not yet posted</li><li>Do not include speculative earnings</li></ul>
         </div>
       </div>
 
@@ -402,8 +402,11 @@ function PointsTab({ tripId, expenses = [] }) {
 
                 {/* Points payments from expenses */}
                 {payments.length > 0 && (
-                  <div style={{ marginTop: '12px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>Redemptions this trip</div>
+                  <div style={{ marginTop: '12px', background: '#FAEEDA', borderRadius: '8px', padding: '10px 12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: '#BA7517', textTransform: 'uppercase', letterSpacing: '0.04em' }}>📋 Committed from Expenses tab</div>
+                      <div style={{ fontSize: '11px', color: '#BA7517', fontWeight: '600' }}>{committed.toLocaleString()} pts total</div>
+                    </div>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid #f0f0f0' }}>

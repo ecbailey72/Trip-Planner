@@ -102,19 +102,19 @@ function TripDetailPage() {
   if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
   if (!trip) return <div style={{ padding: '2rem' }}>Trip not found.</div>;
 
-  const tabs = ['Dashboard', 'Expenses', 'Itinerary', 'Daily Spend', 'Checklist', 'Journal', 'Points', 'Tools'];
+  const tabs = ['Dashboard', 'Itinerary', 'Expenses', 'Points', 'Daily Spend', 'Checklist', 'Journal', 'Tools'];
 
   const tabSubtitle = (tab) => {
     const phase = trip.status || 'planning';
     const subtitles = {
       planning: {
         'Dashboard': 'Budget & trip overview',
-        'Expenses': 'Add bookings & estimates',
+        'Expenses': 'Add bookings & point payments',
         'Itinerary': 'Build your day-by-day plan',
         'Daily Spend': 'Set your daily budget',
         'Checklist': 'Pre-trip tasks to complete',
         'Journal': 'Ready for your notes',
-        'Points': 'Plan your points strategy',
+        'Points': 'Tracks redemptions from Expenses',
         'Tools': 'CPP analyzer & more',
       },
       active: {
@@ -124,7 +124,7 @@ function TripDetailPage() {
         'Daily Spend': 'Log your spending',
         'Checklist': 'Tasks to do on the trip',
         'Journal': 'Capture memories now',
-        'Points': 'Track redemptions',
+        'Points': 'Points used from Expenses',
         'Tools': 'Planning tools',
       },
       complete: {
@@ -134,7 +134,7 @@ function TripDetailPage() {
         'Daily Spend': 'Spending breakdown',
         'Checklist': 'Post-trip follow-ups',
         'Journal': 'Your travel memories',
-        'Points': 'Points performance',
+        'Points': 'Redemption analysis',
         'Tools': 'Analysis tools',
       }
     };
@@ -308,8 +308,26 @@ function TripDetailPage() {
       </div>
 
       {/* ── TAB NAV ── */}
-      <div style={{ background: 'white', borderBottom: '1px solid #E8E6E1', boxShadow: '0 1px 4px rgba(27,42,74,0.06)' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div style={{ background: 'white', borderBottom: '1px solid #E8E6E1', boxShadow: '0 1px 4px rgba(27,42,74,0.06)', position: 'relative' }}>
+        {/* Left scroll button */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, zIndex: 2, display: 'flex', alignItems: 'stretch' }}>
+          <button
+            onClick={() => { const el = document.getElementById('tab-scroll-container'); if (el) el.scrollBy({ left: -150, behavior: 'smooth' }); }}
+            style={{ background: '#1B2A4A', border: 'none', color: 'white', width: '32px', cursor: 'pointer', fontSize: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            ‹
+          </button>
+          <div style={{ width: '40px', background: 'linear-gradient(to left, transparent, white)', pointerEvents: 'none' }} />
+        </div>
+        {/* Fade + scroll button */}
+        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, zIndex: 2, display: 'flex', alignItems: 'stretch' }}>
+          <div style={{ width: '40px', background: 'linear-gradient(to right, transparent, white)', pointerEvents: 'none' }} />
+          <button
+            onClick={() => { const el = document.getElementById('tab-scroll-container'); if (el) el.scrollBy({ left: 150, behavior: 'smooth' }); }}
+            style={{ background: '#1B2A4A', border: 'none', color: 'white', width: '32px', cursor: 'pointer', fontSize: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            ›
+          </button>
+        </div>
+        <div id="tab-scroll-container" style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none', paddingRight: '32px' }}>
           {tabs.map(tab => {
             const key = tab.toLowerCase().replace(' ', '-');
             return (
@@ -317,10 +335,11 @@ function TripDetailPage() {
                 onClick={() => { setActiveTab(key); window.location.hash = key; }}
                 style={{
                   padding: '10px 18px 12px', fontSize: '13px', border: 'none',
-                  background: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap',
-                  borderBottom: activeTab === key ? '2px solid #C9A84C' : '2px solid transparent',
-                  color: activeTab === key ? '#1B2A4A' : '#8A9AB5',
-                  fontWeight: activeTab === key ? '600' : '400',
+                  background: tab === 'Dashboard' && activeTab !== key ? 'rgba(201,168,76,0.08)' : 'transparent',
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  borderBottom: activeTab === key ? '2px solid #C9A84C' : tab === 'Dashboard' ? '2px solid rgba(201,168,76,0.3)' : '2px solid transparent',
+                  color: activeTab === key ? '#1B2A4A' : tab === 'Dashboard' ? '#C9A84C' : '#8A9AB5',
+                  fontWeight: activeTab === key ? '700' : tab === 'Dashboard' ? '700' : '400',
                   transition: 'all 0.2s', textAlign: 'center'
                 }}>
                 <div>{tab}</div>
