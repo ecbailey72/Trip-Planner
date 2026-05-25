@@ -143,7 +143,7 @@ app.get('/api/trips/:tripId/expenses', authMiddleware, async (req, res) => {
 
 app.post('/api/trips/:tripId/expenses', authMiddleware, async (req, res) => {
   try { res.json(await new Expense({ ...req.body, tripId: req.params.tripId }).save()); }
-  catch (err) { res.status(500).json({ error: err.message }); }
+  catch (err) { console.error('Expense save error:', err.message); res.status(500).json({ error: err.message }); }
 });
 
 app.put('/api/trips/:tripId/expenses/:id', authMiddleware, async (req, res) => {

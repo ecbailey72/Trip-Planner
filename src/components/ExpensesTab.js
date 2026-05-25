@@ -261,7 +261,7 @@ function ExpensesTab({ tripId }) {
     if (!form.name) return alert('Please enter an expense name');
     const dataToSave = {
       ...form,
-      eventStatus: form.type === 'planned' ? 'planned' : form.eventStatus,
+      eventStatus: form.eventStatus,
       payments: form.type === 'confirmed' ? payments : []
     };
     try {
@@ -572,6 +572,39 @@ function ExpensesTab({ tripId }) {
                       </div>
                     </div>
                   </div>
+                  {inlineEditId === expense._id && showForm && (
+                    <div style={{ marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense name *</label>
+                          <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Category</label>
+                          <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Estimated amount ($)</label>
+                          <input type="number" value={form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Notes</label>
+                          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+                            rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={handleSave} style={{ padding: '7px 18px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Save changes</button>
+                        <button onClick={() => { setShowForm(false); setEditingExpense(null); setInlineEditId(null); }}
+                          style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #ccc', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
