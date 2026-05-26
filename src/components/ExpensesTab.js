@@ -69,6 +69,11 @@ function PaymentForm({ payment, index, onChange, onRemove }) {
             style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
             {PAYMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
+          {(payment.type === 'pointsBooking' || payment.type === 'cashOffsetByPoints') && (
+            <div style={{ fontSize: '11px', color: '#BA7517', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              💡 This will appear in your <strong>Points tab</strong> as committed spend.
+            </div>
+          )}
         </div>
 
         <div>
