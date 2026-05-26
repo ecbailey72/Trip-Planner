@@ -355,7 +355,7 @@ function TripDetailPage() {
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>
         {activeTab === 'dashboard' && <DashboardTab tripId={id} trip={trip} />}
         {activeTab === 'expenses' && <ExpensesTab tripId={id} />}
-        {activeTab === 'itinerary' && <ItineraryTab tripId={id} />}
+        {activeTab === 'itinerary' && <ItineraryTab tripId={id} trip={trip} />}
         {activeTab === 'daily-spend' && <DailySpendTab tripId={id} dailyBudget={trip.dailyBudget || 200} />}
         {activeTab === 'checklist' && <ChecklistTab tripId={id} tripStartDate={trip.startDate} />}
         {activeTab === 'journal' && <JournalTab tripId={id} />}

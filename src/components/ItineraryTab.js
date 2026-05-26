@@ -35,7 +35,7 @@ const emptyForm = {
   contact: { website: '', address: '', phone: '', email: '' }
 };
 
-function ItineraryTab({ tripId }) {
+function ItineraryTab({ tripId, trip }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -46,6 +46,162 @@ function ItineraryTab({ tripId }) {
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { fetchEvents(); }, [tripId]);
+
+  const printItinerary = () => {
+    const dates = [...new Set(events.map(e => e.date))].sort();
+    const tripName = trip?.name || 'Trip Itinerary';
+    const startDate = trip?.startDate || dates[0] || '';
+    const endDate = trip?.endDate || dates[dates.length - 1] || '';
+
+    const formatDate = (d) => {
+      if (!d) return '';
+      const dt = new Date(d + 'T12:00:00');
+      return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    };
+
+    const formatShortDate = (d) => {
+      if (!d) return '';
+      const dt = new Date(d + 'T12:00:00');
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const eventIcons = {
+      flight: '✈', lodging: '🛏', activity: '🥾', tour: '🏴', restaurant: '🍽',
+      directions: '🧭', parking: '🅿', task: '✅', free: '☀', transportation: '🚌',
+      concert: '🎵', theater: '🎭', rail: '🚆', ferry: '⛴', cruise: '🚢', note: '📝'
+    };
+
+    const statusBadge = (s) => {
+      if (s === 'prepaid') return '<span style="font-size:10px;background:#e8f5e9;color:#2e7d32;padding:1px 6px;border-radius:10px;font-weight:600;">✓ Confirmed</span>';
+      if (s === 'payOnSite') return '<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:10px;font-weight:600;">Pay on site</span>';
+      if (s === 'optional') return '<span style="font-size:10px;background:#f5f5f5;color:#888;padding:1px 6px;border-radius:10px;">Optional</span>';
+      if (s === 'placeholder') return '<span style="font-size:10px;background:#fff8e1;color:#f57f17;padding:1px 6px;border-radius:10px;">Tentative</span>';
+      return '';
+    };
+
+    let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${tripName} — Itinerary</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; background: white; padding: 32px 40px; max-width: 760px; margin: 0 auto; }
+
+    /* Header */
+    .header { margin-bottom: 32px; }
+    .trip-name { font-size: 28px; font-weight: 900; color: #1B2A4A; letter-spacing: -0.5px; }
+    .trip-dates { font-size: 14px; color: #888; margin-top: 4px; }
+    .header-line { height: 3px; background: linear-gradient(to right, #1B2A4A, #C9A84C); border-radius: 2px; margin-top: 12px; }
+
+    /* Day block */
+    .day-block { margin-bottom: 8px; page-break-inside: avoid; }
+
+    /* Day header row — sits on the timeline */
+    .day-row { display: flex; align-items: center; margin-bottom: 0; position: relative; }
+    .day-dot { width: 14px; height: 14px; border-radius: 50%; background: #1B2A4A; flex-shrink: 0; z-index: 1; margin-left: 1px; }
+    .day-label { background: #1B2A4A; color: white; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-left: 12px; }
+
+    /* Timeline container */
+    .timeline { padding-left: 7px; border-left: 2px solid #E0E0E0; margin-left: 7px; padding-top: 4px; padding-bottom: 4px; }
+
+    /* Event row */
+    .event-row { display: flex; align-items: flex-start; gap: 0; padding: 8px 0; position: relative; }
+    .event-dot-wrap { display: flex; flex-direction: column; align-items: center; margin-left: -8px; margin-right: 14px; flex-shrink: 0; }
+    .event-dot { width: 12px; height: 12px; border-radius: 50%; background: white; border: 2px solid #C9A84C; flex-shrink: 0; margin-top: 3px; margin-left: -6px; }
+    .event-icon { font-size: 16px; margin-right: 10px; flex-shrink: 0; margin-top: 1px; }
+    .event-time { font-size: 11px; color: #888; min-width: 65px; flex-shrink: 0; padding-top: 3px; font-weight: 600; }
+    .event-body { flex: 1; }
+    .event-title { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .event-subtitle { font-size: 12px; color: #555; margin-bottom: 2px; }
+    .event-conf { font-size: 11px; color: #888; }
+    .event-notes { font-size: 11px; color: #777; margin-top: 3px; font-style: italic; }
+    .event-meta { font-size: 11px; color: #888; margin-top: 2px; }
+
+    /* Status badges */
+    .badge-confirmed { font-size: 10px; background: #e8f5e9; color: #2e7d32; padding: 1px 7px; border-radius: 10px; font-weight: 600; font-style: normal; }
+    .badge-payonsite { font-size: 10px; background: #e3f2fd; color: #1565c0; padding: 1px 7px; border-radius: 10px; font-weight: 600; font-style: normal; }
+    .badge-optional  { font-size: 10px; background: #f5f5f5; color: #888; padding: 1px 7px; border-radius: 10px; font-style: normal; }
+    .badge-tentative { font-size: 10px; background: #fff8e1; color: #f57f17; padding: 1px 7px; border-radius: 10px; font-weight: 600; font-style: normal; }
+
+    /* Footer */
+    .footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #eee; font-size: 11px; color: #aaa; display: flex; justify-content: space-between; }
+
+    /* Print button */
+    .print-btn { background: #1B2A4A; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 24px; }
+
+    @media print {
+      body { padding: 16px 24px; }
+      .no-print { display: none !important; }
+      .day-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom: 20px; display: flex; align-items: center; gap: 24px;">
+    <button class="print-btn" onclick="window.print()">🖨 Print itinerary</button>
+    <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #444; cursor: pointer;">
+      <input type="checkbox" id="showAllDetails" style="width: 16px; height: 16px; cursor: pointer;">
+      Show all details
+    </label>
+  </div>
+  <script>
+    document.getElementById('showAllDetails').addEventListener('change', function() {
+      const details = document.querySelectorAll('.event-details');
+      details.forEach(d => d.style.display = this.checked ? 'block' : 'none');
+    });
+  </script>
+  <div class="header">
+    <div class="trip-name">${tripName}</div>
+    <div class="trip-dates">${formatShortDate(startDate)} &mdash; ${formatShortDate(endDate)}</div>
+    <div class="header-line"></div>
+  </div>`;
+
+    dates.forEach(date => {
+      const dayEvents = events.filter(e => e.date === date).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+      const badgeFor = (s) => {
+        if (s === 'prepaid') return '<span class="badge-confirmed">✓ Confirmed</span>';
+        if (s === 'payOnSite') return '<span class="badge-payonsite">Pay on site</span>';
+        if (s === 'optional') return '<span class="badge-optional">Optional</span>';
+        if (s === 'placeholder') return '<span class="badge-tentative">Tentative</span>';
+        return '';
+      };
+      html += `<div class="day-block">
+    <div class="day-row">
+      <div class="day-dot"></div>
+      <div class="day-label">${formatDate(date)}</div>
+    </div>
+    <div class="timeline">`;
+      dayEvents.forEach(event => {
+        html += `<div class="event-row">
+        <div class="event-dot-wrap"><div class="event-dot"></div></div>
+        <div class="event-icon">${eventIcons[event.type] || '📌'}</div>
+        <div class="event-time">${event.startTime || '&nbsp;'}${event.endTime ? '<br>' + event.endTime : ''}</div>
+        <div class="event-body">
+          <div class="event-title">${event.title} ${badgeFor(event.status)}</div>
+          <div class="event-details" style="display:none">
+          ${event.subtitle ? '<div class="event-subtitle">' + event.subtitle + '</div>' : ''}
+          ${event.confirmationNumber ? '<div class="event-conf">Conf: ' + event.confirmationNumber + '</div>' : ''}
+          ${event.contact?.address ? '<div class="event-meta">📍 ' + event.contact.address + '</div>' : ''}
+          ${event.contact?.phone ? '<div class="event-meta">📞 ' + event.contact.phone + '</div>' : ''}
+          ${event.notes ? '<div class="event-notes">' + event.notes + '</div>' : ''}
+          </div>
+        </div>
+      </div>`;
+      });
+      html += `</div></div>`;
+    });
+
+    html += `<div class="footer">
+    <span>${tripName} · Printed from Ventaro</span>
+    <span>${new Date().toLocaleDateString()}</span>
+  </div>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+  };
 
   const fetchEvents = async () => {
     try {
@@ -169,7 +325,11 @@ function ItineraryTab({ tripId }) {
       )}
 
       {/* Add event button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '1rem' }}>
+        <button onClick={printItinerary}
+          style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #E8E6E1', color: '#1B2A4A', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
+          🖨 Print
+        </button>
         <button
           onClick={() => openForm(null, activeDay !== 'all' ? activeDay : '')}
           style={{ padding: '8px 16px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
