@@ -200,17 +200,12 @@ function DashboardTab({ tripId, trip }) {
       {/* Budget progress — top of dashboard */}
       {tripBudget > 0 && (!isComplete || showPlanningView) && (
         <div style={{ background: budgetRemaining < 0 ? '#FCEBEB' : budgetPct > 85 ? '#FAEEDA' : '#E1F5EE', borderRadius: '12px', padding: '16px 20px', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75', marginBottom: '3px' }}>Trip value</div>
-              <div style={{ fontSize: '28px', fontWeight: '800', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75' }}>
-                ${Math.round(budgetRemaining >= 0 ? budgetRemaining : Math.abs(budgetRemaining)).toLocaleString()}
-                <span style={{ fontSize: '14px', fontWeight: '400', marginLeft: '6px' }}>{budgetRemaining >= 0 ? 'remaining' : 'over budget'}</span>
-              </div>
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: '#1B2A4A', marginBottom: '4px' }}>
+              Planned Trip Value: ${tripBudget.toLocaleString()}
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '13px', color: '#555' }}>${Math.round(budgetConsumed).toLocaleString()} committed</div>
-              <div style={{ fontSize: '13px', color: '#888' }}>of ${tripBudget.toLocaleString()} total trip value</div>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75' }}>
+              ${Math.round(budgetConsumed).toLocaleString()} Planned ({budgetPct}%)
             </div>
           </div>
           <div style={{ height: '8px', background: 'rgba(0,0,0,0.1)', borderRadius: '4px' }}>
@@ -234,8 +229,8 @@ function DashboardTab({ tripId, trip }) {
             </div>
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Still to plan</div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: '#BA7517' }}>${Math.round(plannedTotal + Math.max(0, budgetRemaining)).toLocaleString()}</div>
-              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{budgetPct}% committed</div>}
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#BA7517' }}>${Math.round(Math.max(0, budgetRemaining)).toLocaleString()}</div>
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{budgetPct}% planned so far</div>}
             </div>
           </div>
         </div>
