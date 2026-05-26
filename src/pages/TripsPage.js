@@ -82,7 +82,7 @@ function TripsPage() {
         position: 'sticky', top: 0, zIndex: 100
       }}>
         <img src="/logo-horizontal.png" alt="Ventaro"
-          style={{ height: '52px', width: 'auto', filter: 'brightness(0) invert(1)', cursor: 'pointer' }}
+          style={{ height: '72px', width: 'auto', filter: 'brightness(0) invert(1)', cursor: 'pointer' }}
           onClick={() => navigate('/')} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {user && <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/profile')}>Hi, {user.name.split(' ')[0]}</span>}

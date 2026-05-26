@@ -155,7 +155,7 @@ function TripDetailPage() {
             <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
               <img src="/logo-horizontal.png" alt="Ventaro"
                 onClick={() => navigate('/')}
-                style={{ height: '72px', width: 'auto', filter: 'brightness(0) invert(1)', cursor: 'pointer' }} />
+                style={{ height: '88px', width: 'auto', filter: 'brightness(0) invert(1)', cursor: 'pointer' }} />
               <button onClick={() => navigate('/trips')}
                 style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.55)', cursor: 'pointer', fontSize: '12px', padding: 0, letterSpacing: '0.02em' }}>
                 ← My Trips
