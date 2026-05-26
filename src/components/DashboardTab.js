@@ -251,7 +251,7 @@ function DashboardTab({ tripId, trip }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
           {[
             { label: 'Cash still owed', value: '$' + Math.round(cashOwed).toLocaleString(), color: '#BA7517', bg: '#FAEEDA', hint: 'Confirmed expenses not yet paid' },
-            { label: 'Cash to set aside', value: '$' + Math.round(netCashNeeded).toLocaleString(), color: '#A32D2D', bg: '#FCEBEB', hint: 'Owed + all remaining cash expenses' },
+            { label: 'Needs Funding', value: '$' + Math.round(netCashNeeded).toLocaleString(), color: '#A32D2D', bg: '#FCEBEB', hint: 'Have cash ready or find points to cover this amount' },
           ].map(m => (
             <div key={m.label} style={{ background: m.bg || '#f5f5f5', borderRadius: '10px', padding: '10px 12px' }}>
               <div style={{ fontSize: '10px', color: m.color, marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, lineHeight: 1.3 }}>{m.label}</div>
@@ -360,13 +360,17 @@ function DashboardTab({ tripId, trip }) {
                 const actualPct = maxVal > 0 ? Math.round(actualAmt / maxVal * 100) : 0;
                 const over = actualAmt > budgetAmt && budgetAmt > 0;
                 const color = COLORS[cat] || '#888';
+                const totalActual = Object.values(actual).reduce((s,v) => s+v, 0);
+                const totalBudget = Object.values(budget).reduce((s,v) => s+v, 0);
+                const actualSharePct = totalActual > 0 ? Math.round(actualAmt / totalActual * 100) : 0;
+                const budgetSharePct = totalBudget > 0 ? Math.round(budgetAmt / totalBudget * 100) : 0;
                 return (
                   <div key={cat} style={{ marginBottom: '12px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
                       <span style={{ fontWeight: '500', color: '#333' }}>{cat}</span>
                       <span style={{ color: '#888' }}>
-                        {budgetAmt > 0 && <span>Planned: ${Math.round(budgetAmt).toLocaleString()}</span>}
-                        {actualAmt > 0 && <span style={{ marginLeft: '8px', color: over ? '#BA7517' : '#1B2A4A', fontWeight: '600' }}>Actual: ${Math.round(actualAmt).toLocaleString()}{over ? ' ⚠' : ''}</span>}
+                        {budgetAmt > 0 && <span>Planned: ${Math.round(budgetAmt).toLocaleString()} <span style={{ color: '#aaa' }}>({budgetSharePct}%)</span></span>}
+                        {actualAmt > 0 && <span style={{ marginLeft: '8px', color: over ? '#BA7517' : '#1B2A4A', fontWeight: '600' }}>Actual: ${Math.round(actualAmt).toLocaleString()} <span style={{ color: '#aaa', fontWeight: '400' }}>({actualSharePct}%)</span>{over ? ' ⚠' : ''}</span>}
                       </span>
                     </div>
                     {/* Budget bar */}
