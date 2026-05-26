@@ -4,8 +4,8 @@ import axios from 'axios';
 const API = process.env.REACT_APP_API_URL || '/api';
 
 const CATEGORIES = [
-  'Flights', 'Lodging', 'Activities & Tours', 'Food & Dining',
-  'Shopping & Souvenirs', 'Car Rental', 'Gas, Tolls & Parking', 'Insurance', 'Pre-trip & Misc'
+  'Flights', 'Lodging', 'Transportation', 'Activities & Tours', 'Food & Dining',
+  'Shopping & Souvenirs', 'Car Rental & Rideshare', 'Gas, Tolls & Parking', 'Insurance', 'Pre-trip & Misc'
 ];
 
 const EVENT_STATUS = [

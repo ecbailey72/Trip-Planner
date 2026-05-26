@@ -29,7 +29,7 @@ const expenseSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: {
     type: String,
-    enum: ['Flights', 'Lodging', 'Activities & Tours', 'Food & Dining', 'Shopping & Souvenirs', 'Car Rental', 'Gas, Tolls & Parking', 'Insurance', 'Pre-trip & Misc'],
+    enum: ['Flights', 'Lodging', 'Transportation', 'Activities & Tours', 'Food & Dining', 'Shopping & Souvenirs', 'Car Rental & Rideshare', 'Gas, Tolls & Parking', 'Insurance', 'Pre-trip & Misc'],
     required: true
   },
   type: { type: String, enum: ['confirmed', 'planned'], default: 'confirmed' },
