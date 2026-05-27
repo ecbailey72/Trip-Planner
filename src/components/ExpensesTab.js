@@ -17,7 +17,7 @@ const EVENT_STATUS = [
 const PAYMENT_TYPES = [
   { value: 'cash', label: 'Cash / credit card charge' },
   { value: 'pointsBooking', label: 'Points booking (no cash)' },
-  { value: 'cashOffsetByPoints', label: 'Cash charge, paid with points' },
+  { value: 'cashOffsetByPoints', label: 'Partial points redemption (points + cash)' },
   { value: 'credit', label: 'Credit / voucher' }
 ];
 
