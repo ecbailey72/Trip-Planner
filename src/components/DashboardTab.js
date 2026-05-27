@@ -74,9 +74,15 @@ function DashboardTab({ tripId, trip }) {
   confirmed.forEach(e => {
     e.payments?.forEach(p => {
       if (p.type === 'pointsBooking') {
-        pointsCommittedValue += (p.pointsAmount || 0) * cppBenchmark / 100;
+        // Direct booking — points covered full expense value
+        pointsCommittedValue += e.totalValue || 0;
       }
       if (p.type === 'cashOffsetByPoints') {
+        // Partial — points covered charge minus net cash out
+        pointsCommittedValue += (e.totalValue || 0) - (p.netCashOut || 0);
+      }
+      if (p.type === 'pointsStatementCredit') {
+        // Statement credit — points covered the charge amount
         pointsCommittedValue += (p.pointsAmount || 0) * cppBenchmark / 100;
       }
     });
@@ -160,6 +166,7 @@ function DashboardTab({ tripId, trip }) {
   const isPlanning = phase === 'planning';
   const isActive = phase === 'active';
   const isComplete = phase === 'complete';
+  const netCashNeededFinal = cashOwed + (isComplete ? 0 : plannedTotal);
 
   return (
     <div>
@@ -224,8 +231,8 @@ function DashboardTab({ tripId, trip }) {
             </div>
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Cash out of pocket</div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1B2A4A' }}>${Math.round(cashPaid + cashOwed).toLocaleString()}</div>
-              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round((cashPaid + cashOwed) / tripBudget * 100)}% of trip value</div>}
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1B2A4A' }}>${Math.round(cashPaid + cashOwed + totalSpent).toLocaleString()}</div>
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round((cashPaid + cashOwed + totalSpent) / tripBudget * 100)}% of trip value</div>}
             </div>
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Still to plan</div>
@@ -251,7 +258,7 @@ function DashboardTab({ tripId, trip }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
           {[
             { label: 'Cash still owed', value: '$' + Math.round(cashOwed).toLocaleString(), color: '#BA7517', bg: '#FAEEDA', hint: 'Confirmed expenses not yet paid' },
-            { label: 'Needs Funding', value: '$' + Math.round(netCashNeeded).toLocaleString(), color: '#A32D2D', bg: '#FCEBEB', hint: 'Have cash ready or find points to cover this amount' },
+            ...(!isComplete ? [{ label: 'Needs Funding', value: '$' + Math.round(netCashNeededFinal).toLocaleString(), color: '#A32D2D', bg: '#FCEBEB', hint: 'Have cash ready or find points to cover this amount' }] : []),
           ].map(m => (
             <div key={m.label} style={{ background: m.bg || '#f5f5f5', borderRadius: '10px', padding: '10px 12px' }}>
               <div style={{ fontSize: '10px', color: m.color, marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.8, lineHeight: 1.3 }}>{m.label}</div>
