@@ -58,20 +58,14 @@ function LandingPage() {
           }}>
             Travel smarter.<br />Remember everything.
           </h1>
-          <p style={{
-            fontSize: 'clamp(0.9rem, 2vw, 1.1rem)', color: 'rgba(255,255,255,0.85)',
-            marginBottom: '1.5rem', lineHeight: 1.6,
-            textShadow: '0 1px 8px rgba(0,0,0,0.3)'
-          }}>
-            Plan your itinerary, track your budget, maximize your points,<br />
-            and relive every adventure — all in one place.
-          </p>
+          <div style={{ fontSize: 'clamp(0.8rem, 1.5vw, 0.95rem)', color: '#C9A84C', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '0.75rem', lineHeight: 1.6 }}>The only trip planner built<br />specifically for points travelers</div>
+
         </div>
 
         {/* Bottom content — button anchored to lower portion */}
         <div style={{
           position: 'relative', textAlign: 'center',
-          flex: '0 0 auto', marginTop: 'auto', paddingBottom: '8vh'
+          flex: '0 0 auto', marginTop: 'auto', paddingBottom: '3vh'
         }}>
           <button
             onClick={() => navigate('/login')}
@@ -103,29 +97,59 @@ function LandingPage() {
               Everything you need
             </div>
             <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: '800', color: '#1B2A4A', marginBottom: '12px' }}>
-              Built for the serious traveler
+              Built for the points-savvy traveler
             </h2>
             <p style={{ fontSize: '16px', color: '#4A5568', maxWidth: '520px', margin: '0 auto', lineHeight: 1.7 }}>
-              From the first flight search to the last journal entry — Ventaro keeps your trips organized, your budget on track, and your memories intact.
+              Most trip planners ignore your points. Ventaro doesn't. From CPP analysis to committed spend tracking — your points are treated as currency, not an afterthought.
             </p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
             {[
+              { icon: '⭐', title: 'Points optimizer', desc: 'Track balances, anticipated earnings, and cpp per redemption. Know exactly how much your points are worth — and commit them to expenses automatically.', featured: true },
               { icon: '✈', title: 'Smart itinerary', desc: 'Day-by-day planning with event types, contact links, confirmation numbers, and live timeline view during your trip.' },
               { icon: '💰', title: 'Budget intelligence', desc: 'Track confirmed expenses, planned estimates, cash flow, and how much you need to have set aside — all in real time.' },
-              { icon: '⭐', title: 'Points optimizer', desc: 'Track your points balances, anticipated earnings, and cpp per redemption. Know exactly how much your points are worth.' },
               { icon: '📊', title: 'Daily spend tracker', desc: 'Log every coffee, dinner, and souvenir by category. See daily totals, over/under budget, and category breakdowns.' },
               { icon: '✓', title: 'Pre-trip checklist', desc: 'Three-phase task management — before, during, and after your trip. Relative due dates, overdue warnings, progress tracking.' },
               { icon: '📓', title: 'Travel journal', desc: 'Capture memories, tips, local phrases, and reviews in the moment. Tag and filter by type to find exactly what you wrote.' },
             ].map(f => (
               <div key={f.title} style={{
                 padding: '1.75rem', borderRadius: '14px',
-                border: '1px solid #E8E6E1', background: '#FAFAF8'
+                border: f.featured ? '2px solid #C9A84C' : '1px solid #E8E6E1',
+                background: f.featured ? '#1B2A4A' : '#FAFAF8',
+                gridColumn: f.featured ? 'span 2' : 'span 1',
               }}>
                 <div style={{ fontSize: '28px', marginBottom: '14px' }}>{f.icon}</div>
-                <div style={{ fontSize: '16px', fontWeight: '700', color: '#1B2A4A', marginBottom: '8px' }}>{f.title}</div>
-                <div style={{ fontSize: '14px', color: '#4A5568', lineHeight: 1.65 }}>{f.desc}</div>
+                <div style={{ fontSize: f.featured ? '20px' : '16px', fontWeight: '700', color: f.featured ? '#C9A84C' : '#1B2A4A', marginBottom: '8px' }}>{f.title}</div>
+                <div style={{ fontSize: '14px', color: f.featured ? 'rgba(255,255,255,0.85)' : '#4A5568', lineHeight: 1.65 }}>{f.desc}</div>
+                {f.featured && <div style={{ marginTop: '12px', fontSize: '12px', color: '#C9A84C', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' }}>✦ Ventaro's signature feature</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── POINTS CALLOUT ── */}
+      <div style={{ background: '#1B2A4A', padding: '4rem 2rem' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#C9A84C', marginBottom: '16px' }}>
+            Points aren't a bonus — they're currency
+          </div>
+          <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: '800', color: 'white', marginBottom: '16px', lineHeight: 1.3 }}>
+            Most trip planners ignore your points.<br />Ventaro doesn't.
+          </h2>
+          <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, maxWidth: '580px', margin: '0 auto 2rem' }}>
+            Ventaro tracks your points balances, analyzes redemption value with the CPP Analyzer, and automatically commits points to expenses — so your available balance is always accurate. Whether you're booking through a portal or transferring to an airline partner, Ventaro helps you get the most out of every point.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', maxWidth: '640px', margin: '0 auto' }}>
+            {[
+              { stat: 'CPP Analyzer', desc: 'Compare redemption options side by side' },
+              { stat: 'Auto-tracking', desc: 'Points committed when you add expenses' },
+              { stat: 'Multi-program', desc: 'Track Amex, Chase, Capital One & more' },
+            ].map(s => (
+              <div key={s.stat} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.25rem', border: '1px solid rgba(201,168,76,0.3)' }}>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: '#C9A84C', marginBottom: '6px' }}>{s.stat}</div>
+                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{s.desc}</div>
               </div>
             ))}
           </div>
