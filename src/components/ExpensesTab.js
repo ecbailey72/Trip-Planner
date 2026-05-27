@@ -15,10 +15,11 @@ const EVENT_STATUS = [
 ];
 
 const PAYMENT_TYPES = [
-  { value: 'cash', label: 'Cash / credit card charge' },
-  { value: 'pointsBooking', label: 'Points booking (no cash)' },
-  { value: 'cashOffsetByPoints', label: 'Partial points redemption (points + cash)' },
-  { value: 'credit', label: 'Credit / voucher' }
+  { value: 'cash', label: 'Cash or card' },
+  { value: 'pointsBooking', label: 'Points — Direct booking' },
+  { value: 'cashOffsetByPoints', label: 'Partial points redemption' },
+  { value: 'credit', label: 'Account credit or voucher' },
+  { value: 'pointsStatementCredit', label: 'Points — Statement credit' }
 ];
 
 const PROGRAMS = [
