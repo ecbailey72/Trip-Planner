@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_API_URL || '/api';
@@ -31,7 +31,7 @@ const STATUS_OPTIONS = [
 
 const emptyForm = {
   date: '', startTime: '', endTime: '', type: 'activity', title: '', subtitle: '',
-  notes: '', status: 'prepaid', cost: '', confirmationNumber: '',
+  notes: '', status: 'placeholder', cost: '', confirmationNumber: '',
   contact: { website: '', address: '', phone: '', email: '' }
 };
 
@@ -485,12 +485,13 @@ function ItineraryTab({ tripId, trip }) {
                   const ts = EVENT_TYPES[event.type] || EVENT_TYPES.note;
                   const isOptional = event.status === 'optional';
                   return (
-                    <div key={event._id} style={{
+                    <React.Fragment key={event._id}>
+                    <div style={{
                       background: 'white',
                       border: isOptional ? '1.5px dashed #ccc' : '1px solid #e0e0e0',
                       borderRadius: '12px',
                       padding: '12px 14px',
-                      marginBottom: '8px',
+                      marginBottom: inlineEditId === event._id ? '0' : '8px',
                       display: 'flex',
                       gap: '12px',
                       opacity: isOptional ? 0.75 : 1
@@ -569,6 +570,87 @@ function ItineraryTab({ tripId, trip }) {
                         </div>
                       </div>
                     </div>
+                    {/* Inline edit form */}
+                    {inlineEditId === event._id && showForm && (
+                      <div style={{ background: '#f0f2f8', border: '1px solid #d0d8e8', borderRadius: '0 0 12px 12px', padding: '1rem', marginBottom: '8px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Title *</label>
+                            <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} autoFocus
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Type</label>
+                            <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }}>
+                              {Object.entries(EVENT_TYPES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Status</label>
+                            <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }}>
+                              {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Start time</label>
+                            <input value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })}
+                              placeholder="e.g. 9:00 AM"
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>End time</label>
+                            <input value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })}
+                              placeholder="e.g. 11:00 AM"
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Subtitle</label>
+                            <input value={form.subtitle} onChange={e => setForm({ ...form, subtitle: e.target.value })}
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Confirmation #</label>
+                            <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Cost</label>
+                            <input value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })}
+                              placeholder="e.g. $150"
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Notes</label>
+                            <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+                              rows={2} style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', resize: 'vertical', outline: 'none' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Address</label>
+                            <input value={form.contact?.address || ''} onChange={e => setForm({ ...form, contact: { ...form.contact, address: e.target.value } })}
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Website</label>
+                            <input value={form.contact?.website || ''} onChange={e => setForm({ ...form, contact: { ...form.contact, website: e.target.value } })}
+                              placeholder="e.g. hilton.com"
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={handleSave}
+                            style={{ padding: '7px 18px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
+                            Save changes
+                          </button>
+                          <button onClick={() => { setShowForm(false); setEditingEvent(null); setInlineEditId(null); }}
+                            style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #E8E6E1', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', color: '#4A5568' }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    </React.Fragment>
                   );
                 })}
 
@@ -599,6 +681,41 @@ function ItineraryTab({ tripId, trip }) {
                       <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Subtitle</label>
                       <input value={form.subtitle} onChange={e => setForm({ ...form, subtitle: e.target.value })}
                         placeholder="e.g. Flight details, address..."
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Status</label>
+                      <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }}>
+                        {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>End time</label>
+                      <input value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })}
+                        placeholder="e.g. 11:00 AM"
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Confirmation #</label>
+                      <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Cost</label>
+                      <input value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })}
+                        placeholder="e.g. $150"
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Address</label>
+                      <input value={form.contact?.address || ''} onChange={e => setForm({ ...form, contact: { ...form.contact, address: e.target.value } })}
+                        style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Website</label>
+                      <input value={form.contact?.website || ''} onChange={e => setForm({ ...form, contact: { ...form.contact, website: e.target.value } })}
+                        placeholder="e.g. hilton.com"
                         style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>

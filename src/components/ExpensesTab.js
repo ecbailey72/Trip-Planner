@@ -213,7 +213,7 @@ function ExpensesTab({ tripId }) {
   const [inlineEditId, setInlineEditId] = useState(null); // expense._id being edited inline
   const [payments, setPayments] = useState([{ ...emptyPayment }]);
   const [form, setForm] = useState({
-    name: '', category: 'Flights', type: 'confirmed', eventStatus: 'prepaid',
+    name: '', category: 'Flights', type: 'planned', eventStatus: 'placeholder',
     totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: ''
   });
 
@@ -246,7 +246,7 @@ function ExpensesTab({ tripId }) {
     } else {
       setEditingExpense(null);
       setInlineEditId(null);
-      setForm({ name: '', category: 'Flights', type: 'confirmed', eventStatus: 'prepaid', totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '' });
+      setForm({ name: '', category: 'Flights', type: 'planned', eventStatus: 'placeholder', totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '' });
       setPayments([{ ...emptyPayment }]);
     }
     setShowForm(true);
