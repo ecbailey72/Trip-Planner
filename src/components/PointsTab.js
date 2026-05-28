@@ -114,7 +114,7 @@ function PointsTab({ tripId, expenses = [] }) {
     expenses.forEach(expense => {
       if (expense.payments) {
         expense.payments.forEach(p => {
-          if ((p.type === 'pointsBooking' || p.type === 'cashOffsetByPoints') && p.pointsProgram === program) {
+          if ((p.type === 'pointsBooking' || p.type === 'cashOffsetByPoints' || p.type === 'pointsStatementCredit') && p.pointsProgram === program) {
             committed += p.pointsAmount || 0;
           }
         });
@@ -150,7 +150,7 @@ function PointsTab({ tripId, expenses = [] }) {
     expenses.forEach(expense => {
       if (expense.payments) {
         expense.payments.forEach(p => {
-          if ((p.type === 'pointsBooking' || p.type === 'cashOffsetByPoints') && p.pointsProgram === program) {
+          if ((p.type === 'pointsBooking' || p.type === 'cashOffsetByPoints' || p.type === 'pointsStatementCredit') && p.pointsProgram === program) {
             payments.push({ ...p, expenseName: expense.name, expenseValue: expense.totalValue });
           }
         });
@@ -419,7 +419,7 @@ function PointsTab({ tripId, expenses = [] }) {
                       </thead>
                       <tbody>
                         {payments.map((p, idx) => {
-                          const value = p.type === 'pointsBooking' ? p.expenseValue : p.chargeAmount;
+                          const value = p.type === 'pointsBooking' ? p.expenseValue : p.type === 'pointsStatementCredit' ? p.amount : p.chargeAmount;
                           const cpp = calcCpp(value || 0, p.pointsAmount || 0);
                           const cppGood = cpp >= benchmark;
                           return (
