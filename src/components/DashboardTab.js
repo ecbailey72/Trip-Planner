@@ -70,20 +70,20 @@ function DashboardTab({ tripId, trip }) {
   const cppBenchmark = trip.cppBenchmark || 1.5;
 
   // Calculate points value committed using benchmark
-  let pointsCommittedValue = 0;
+  let pointsCommittedValue = 0; let debugPoints = []; console.log("POINTS DEBUG:", debugPoints);
   confirmed.forEach(e => {
     e.payments?.forEach(p => {
       if (p.type === 'pointsBooking') {
         // Direct booking — points covered full expense value
-        pointsCommittedValue += e.totalValue || 0;
+        pointsCommittedValue += e.totalValue || 0; debugPoints.push({name: e.name, type: p.type, added: e.totalValue});
       }
       if (p.type === 'cashOffsetByPoints') {
         // Partial — points covered charge minus net cash out
-        pointsCommittedValue += (e.totalValue || 0) - (p.netCashOut || 0);
+        pointsCommittedValue += (e.totalValue || 0) - (p.netCashOut || 0); debugPoints.push({name: e.name, type: p.type, added: (e.totalValue||0)-(p.netCashOut||0)});
       }
       if (p.type === 'pointsStatementCredit') {
-        // Statement credit — points covered the charge amount
-        pointsCommittedValue += (p.pointsAmount || 0) * cppBenchmark / 100;
+        // Statement credit — use dollar value of credit
+        pointsCommittedValue += p.amount || 0;
       }
     });
   });

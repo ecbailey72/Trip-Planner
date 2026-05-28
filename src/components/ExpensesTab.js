@@ -134,11 +134,40 @@ function PaymentForm({ payment, index, onChange, onRemove }) {
           </>
         )}
 
+        {/* POINTS STATEMENT CREDIT */}
+        {payment.type === 'pointsStatementCredit' && (
+          <>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program</label>
+              <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
+                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                <option value="">Select program</option>
+                {PROGRAMS.map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points used</label>
+              <input type="number" value={payment.pointsAmount} onChange={e => update('pointsAmount', e.target.value)}
+                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Statement credit value ($)</label>
+              <input type="number" value={payment.amount} onChange={e => update('amount', e.target.value)}
+                placeholder="Dollar value of credit" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date applied</label>
+              <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
+                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            </div>
+          </>
+        )}
+
         {/* CASH OFFSET BY POINTS */}
         {payment.type === 'cashOffsetByPoints' && (
           <>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Charge amount ($)</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Amount covered by points ($)</label>
               <input type="number" value={payment.chargeAmount} onChange={e => update('chargeAmount', e.target.value)}
                 placeholder="Amount on statement" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
