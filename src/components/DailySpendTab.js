@@ -19,13 +19,15 @@ const CATEGORY_COLORS = {
 const emptyForm = (date = '') => ({
   date: date || new Date().toISOString().split('T')[0],
   amount: '',
+  localAmount: '',
   category: 'Food & Drinks',
   description: '',
   paymentMethod: 'Credit card'
 });
 
-function InlineForm({ date, onSave, onCancel }) {
+function InlineForm({ date, onSave, onCancel, localCurrency = 'USD', exchangeRate = 1 }) {
   const [form, setForm] = useState(emptyForm(date));
+  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
 
   const handleSave = () => {
     if (!form.amount || form.amount <= 0) return alert('Please enter an amount');
@@ -45,6 +47,20 @@ function InlineForm({ date, onSave, onCancel }) {
           <input type="number" value={form.amount} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || '' })}
             placeholder="0.00" step="0.01" autoFocus
             style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+          {isInternational && (
+            <div style={{ marginTop: '5px' }}>
+              <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
+              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
+                <input type="number" value={form.localAmount || ''} onChange={e => {
+                  const local = parseFloat(e.target.value) || '';
+                  const usd = local ? (local / exchangeRate).toFixed(2) : '';
+                  setForm({ ...form, localAmount: local, amount: usd });
+                }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                {form.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${form.localAmount ? parseFloat(form.localAmount / exchangeRate).toFixed(2) : '0.00'}</span>}
+              </div>
+            </div>
+          )}
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Category</label>
@@ -81,7 +97,8 @@ function InlineForm({ date, onSave, onCancel }) {
   );
 }
 
-function DailySpendTab({ tripId, dailyBudget = 200 }) {
+function DailySpendTab({ tripId, dailyBudget = 200, localCurrency = 'USD', exchangeRate = 1 }) {
+  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState('all');
@@ -262,6 +279,8 @@ function DailySpendTab({ tripId, dailyBudget = 200 }) {
           date={activeDay !== 'all' ? activeDay : ''}
           onSave={handleSave}
           onCancel={() => setShowTopForm(false)}
+          localCurrency={localCurrency}
+          exchangeRate={exchangeRate}
         />
       )}
 
@@ -310,6 +329,8 @@ function DailySpendTab({ tripId, dailyBudget = 200 }) {
                               date={item.date}
                               onSave={handleUpdate}
                               onCancel={() => setEditingItem(null)}
+                              localCurrency={localCurrency}
+                              exchangeRate={exchangeRate}
                             />
                           </div>
                         ) : (
@@ -319,7 +340,7 @@ function DailySpendTab({ tripId, dailyBudget = 200 }) {
                             </span>
                             <span style={{ flex: 1, fontSize: '13px', color: '#444' }}>{item.description || '—'}</span>
                             <span style={{ fontSize: '13px', color: '#888', whiteSpace: 'nowrap' }}>{item.paymentMethod === 'Cash' ? '💵' : '💳'}</span>
-                            <span style={{ fontSize: '14px', fontWeight: '600', minWidth: '50px', textAlign: 'right' }}>${item.amount.toFixed(0)}</span>
+                            <span style={{ fontSize: '14px', fontWeight: '600', minWidth: '50px', textAlign: 'right' }}>${item.amount.toFixed(0)}{item.localAmount > 0 && <span style={{ fontSize: '11px', color: '#8A9AB5', fontWeight: '400' }}> ({localCurrency} {Math.round(item.localAmount).toLocaleString()})</span>}</span>
                             <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                               <button onClick={() => { setEditingItem(item); setInlineFormDay(null); setShowTopForm(false); }}
                                 style={{ fontSize: '11px', padding: '2px 6px', border: '1px solid #ccc', borderRadius: '4px', background: 'transparent', color: '#555', cursor: 'pointer' }}>Edit</button>
@@ -339,6 +360,8 @@ function DailySpendTab({ tripId, dailyBudget = 200 }) {
                     date={date}
                     onSave={handleSave}
                     onCancel={() => setInlineFormDay(null)}
+                    localCurrency={localCurrency}
+                    exchangeRate={exchangeRate}
                   />
                 ) : (
                   <button onClick={() => { setInlineFormDay(date); setShowTopForm(false); setEditingItem(null); }}

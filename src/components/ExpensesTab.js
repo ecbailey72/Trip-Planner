@@ -53,8 +53,9 @@ const emptyPayment = {
   notes: ''
 };
 
-function PaymentForm({ payment, index, onChange, onRemove }) {
+function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD', exchangeRate = 1 }) {
   const update = (field, value) => onChange(index, { ...payment, [field]: value });
+  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
 
   return (
     <div style={{ background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem', marginBottom: '10px' }}>
@@ -95,6 +96,20 @@ function PaymentForm({ payment, index, onChange, onRemove }) {
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Amount ($)</label>
               <input type="number" value={payment.amount} onChange={e => update('amount', e.target.value)}
                 placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+              {isInternational && (
+                <div style={{ marginTop: '5px' }}>
+                  <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
+                  <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
+                    <input type="number" value={payment.localAmount || ''} onChange={e => {
+                      const local = parseFloat(e.target.value) || '';
+                      const usd = local ? parseFloat((local / exchangeRate).toFixed(2)) : '';
+                      onChange(index, { ...payment, localAmount: local, localCurrency, amount: usd ? usd.toFixed(2) : '' });
+                    }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    {payment.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(payment.amount || 0).toFixed(2)}</span>}
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Payment method</label>
@@ -216,6 +231,20 @@ function PaymentForm({ payment, index, onChange, onRemove }) {
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Credit amount ($)</label>
               <input type="number" value={payment.creditAmount} onChange={e => update('creditAmount', e.target.value)}
                 placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+              {isInternational && (
+                <div style={{ marginTop: '5px' }}>
+                  <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
+                  <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
+                    <input type="number" value={payment.localAmount || ''} onChange={e => {
+                      const local = parseFloat(e.target.value) || '';
+                      const usd = local ? parseFloat((local / exchangeRate).toFixed(2)) : '';
+                      onChange(index, { ...payment, localAmount: local, localCurrency, creditAmount: usd ? usd.toFixed(2) : '' });
+                    }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    {payment.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(payment.creditAmount || 0).toFixed(2)}</span>}
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Remaining cash ($)</label>
@@ -235,7 +264,8 @@ function PaymentForm({ payment, index, onChange, onRemove }) {
   );
 }
 
-function ExpensesTab({ tripId }) {
+function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
+  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -244,7 +274,7 @@ function ExpensesTab({ tripId }) {
   const [payments, setPayments] = useState([{ ...emptyPayment }]);
   const [form, setForm] = useState({
     name: '', category: 'Flights', type: 'planned', eventStatus: 'placeholder',
-    totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: ''
+    totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '', localAmount: '', localCurrency: ''
   });
 
   useEffect(() => { fetchExpenses(); }, [tripId]);
@@ -276,7 +306,7 @@ function ExpensesTab({ tripId }) {
     } else {
       setEditingExpense(null);
       setInlineEditId(null);
-      setForm({ name: '', category: 'Flights', type: 'planned', eventStatus: 'placeholder', totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '' });
+      setForm({ name: '', category: 'Flights', type: 'planned', eventStatus: 'placeholder', totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '', localAmount: '', localCurrency: '' });
       setPayments([{ ...emptyPayment }]);
     }
     setShowForm(true);
@@ -403,8 +433,22 @@ function ExpensesTab({ tripId }) {
             )}
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount ($)' : 'Final / actual value ($)'}</label>
-              <input type="number" value={form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
+              <input type="number" value={form.localAmount && form.totalValue ? parseFloat(form.totalValue).toFixed(2) : form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
                 placeholder="0" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+              {isInternational && (
+                <div style={{ marginTop: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', color: '#8A9AB5', marginBottom: '3px' }}>Or enter in {localCurrency}</label>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px', color: '#8A9AB5' }}>{localCurrency}</span>
+                    <input type="number" value={form.localAmount} onChange={e => {
+                      const local = parseFloat(e.target.value) || '';
+                      const usd = local ? Math.round(local / exchangeRate * 100) / 100 : '';
+                      setForm({ ...form, localAmount: local, localCurrency, totalValue: usd });
+                    }} placeholder="0" style={{ flex: 1, padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                    {form.localAmount > 0 && <span style={{ fontSize: '12px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(form.totalValue).toFixed(2)}</span>}
+                  </div>
+                </div>
+              )}
             </div>
             {form.type === 'confirmed' && (
             <div>
@@ -456,7 +500,7 @@ function ExpensesTab({ tripId }) {
                 </button>
               </div>
               {payments.map((p, i) => (
-                <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} />
+                <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} />
               ))}
             </div>
           )}
@@ -510,7 +554,7 @@ function ExpensesTab({ tripId }) {
                       )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
-                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}</div>
+                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}{expense.localAmount > 0 && <span style={{ fontSize: '13px', color: '#8A9AB5', fontWeight: '400', marginLeft: '6px' }}>({expense.localCurrency} {Math.round(expense.localAmount).toLocaleString()})</span>}</div>
                       {expense.estimatedValue != null && expense.estimatedValue !== '' && expense.estimatedValue !== expense.totalValue && (
                         <div style={{ fontSize: '11px', marginBottom: '4px', color: expense.totalValue > expense.estimatedValue ? '#A32D2D' : '#1A7A5C', fontWeight: '600' }}>
                           {expense.totalValue > expense.estimatedValue ? '▲' : '▼'} ${Math.abs(Math.round(expense.totalValue - expense.estimatedValue)).toLocaleString()} vs ${Math.round(expense.estimatedValue).toLocaleString()} est.
@@ -588,7 +632,7 @@ function ExpensesTab({ tripId }) {
                           </button>
                         </div>
                         {payments.map((p, i) => (
-                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} />
+                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} />
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -617,7 +661,7 @@ function ExpensesTab({ tripId }) {
                       <div style={{ fontSize: '12px', color: '#888' }}>{expense.category}{expense.notes && ` · ${expense.notes}`}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
-                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}</div>
+                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}{expense.localAmount > 0 && <span style={{ fontSize: '13px', color: '#8A9AB5', fontWeight: '400', marginLeft: '6px' }}>({expense.localCurrency} {Math.round(expense.localAmount).toLocaleString()})</span>}</div>
                       {expense.estimatedValue != null && expense.estimatedValue !== '' && expense.estimatedValue !== expense.totalValue && (
                         <div style={{ fontSize: '11px', marginBottom: '4px', color: expense.totalValue > expense.estimatedValue ? '#A32D2D' : '#1A7A5C', fontWeight: '600' }}>
                           {expense.totalValue > expense.estimatedValue ? '▲' : '▼'} ${Math.abs(Math.round(expense.totalValue - expense.estimatedValue)).toLocaleString()} vs ${Math.round(expense.estimatedValue).toLocaleString()} est.
@@ -674,7 +718,7 @@ function ExpensesTab({ tripId }) {
                           </button>
                         </div>
                         {payments.map((p, i) => (
-                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} />
+                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} />
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>

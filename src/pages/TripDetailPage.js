@@ -188,7 +188,8 @@ function TripDetailPage() {
                     setTripForm({
                       name: trip.name, startDate: trip.startDate || '', endDate: trip.endDate || '',
                       tripBudget: trip.tripBudget || '', dailyBudget: trip.dailyBudget || '',
-                      status: trip.status, cppBenchmark: trip.cppBenchmark || 1.5
+                      status: trip.status, cppBenchmark: trip.cppBenchmark || 1.5,
+                      country: trip.country || 'United States', localCurrency: trip.localCurrency || 'USD', exchangeRate: trip.exchangeRate || 1
                     });
                     setEditingTrip(true);
                   }}
@@ -284,6 +285,22 @@ function TripDetailPage() {
                     placeholder="e.g. 1.5" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
                 </div>
                 <div>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Country</label>
+                  <input value={tripForm.country || ''} onChange={e => setTripForm({ ...tripForm, country: e.target.value })}
+                    placeholder="e.g. Japan" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Local currency</label>
+                  <input value={tripForm.localCurrency || ''} onChange={e => setTripForm({ ...tripForm, localCurrency: e.target.value })}
+                    placeholder="e.g. JPY" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Exchange rate ({tripForm.localCurrency || 'local'} per USD)</label>
+                  <input type="number" step="0.01" value={tripForm.exchangeRate || ''} onChange={e => setTripForm({ ...tripForm, exchangeRate: parseFloat(e.target.value) || 1 })}
+                    placeholder="e.g. 149.50" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginTop: '3px' }}>Update as rates change. Paid expenses lock in their USD value at time of entry.</div>
+                </div>
+                <div>
                   <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Status</label>
                   <select value={tripForm.status || 'planning'} onChange={e => setTripForm({ ...tripForm, status: e.target.value })}
                     style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }}>
@@ -354,9 +371,9 @@ function TripDetailPage() {
       {/* ── CONTENT ── */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>
         {activeTab === 'dashboard' && <DashboardTab tripId={id} trip={trip} />}
-        {activeTab === 'expenses' && <ExpensesTab tripId={id} />}
+        {activeTab === 'expenses' && <ExpensesTab tripId={id} localCurrency={trip.localCurrency || 'USD'} exchangeRate={trip.exchangeRate || 1} />}
         {activeTab === 'itinerary' && <ItineraryTab tripId={id} trip={trip} />}
-        {activeTab === 'daily-spend' && <DailySpendTab tripId={id} dailyBudget={trip.dailyBudget || 200} />}
+        {activeTab === 'daily-spend' && <DailySpendTab tripId={id} dailyBudget={trip.dailyBudget || 200} localCurrency={trip.localCurrency || 'USD'} exchangeRate={trip.exchangeRate || 1} />}
         {activeTab === 'checklist' && <ChecklistTab tripId={id} tripStartDate={trip.startDate} />}
         {activeTab === 'journal' && <JournalTab tripId={id} />}
         {activeTab === 'points' && <PointsTab tripId={id} expenses={expenses} />}

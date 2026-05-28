@@ -6,6 +6,7 @@ const DailySpendSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   currency: { type: String, default: 'USD' },
   amountUSD: { type: Number },
+  localAmount: { type: Number },
   category: {
     type: String,
     enum: ['Food & Drinks', 'Transportation', 'Shopping', 'Activities', 'Tips', 'Entrance Fees', 'Misc'],
