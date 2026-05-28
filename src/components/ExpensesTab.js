@@ -569,6 +569,15 @@ function ExpensesTab({ tripId }) {
                             rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
                         </div>
                       </div>
+                      {/* Expense type */}
+                      <div style={{ marginBottom: '12px' }}>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense type</label>
+                        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
+                          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                          <option value="planned">Planned estimate</option>
+                          <option value="confirmed">Confirmed</option>
+                        </select>
+                      </div>
                       {/* Payments section in inline edit */}
                       <div style={{ marginBottom: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -645,6 +654,28 @@ function ExpensesTab({ tripId }) {
                           <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                             rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
                         </div>
+                      </div>
+                      {/* Expense type */}
+                      <div style={{ marginBottom: '12px' }}>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense type</label>
+                        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
+                          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                          <option value="planned">Planned estimate</option>
+                          <option value="confirmed">Confirmed</option>
+                        </select>
+                      </div>
+                      {/* Payments section */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payments</h4>
+                          <button onClick={() => setPayments([...payments, { ...emptyPayment }])}
+                            style={{ fontSize: '12px', padding: '4px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', cursor: 'pointer' }}>
+                            + Add payment
+                          </button>
+                        </div>
+                        {payments.map((p, i) => (
+                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} />
+                        ))}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button onClick={handleSave} style={{ padding: '7px 18px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Save changes</button>

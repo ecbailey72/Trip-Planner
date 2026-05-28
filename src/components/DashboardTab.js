@@ -222,17 +222,17 @@ function DashboardTab({ tripId, trip }) {
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Covered by points</div>
               <div style={{ fontSize: '15px', fontWeight: '700', color: '#1D9E75' }}>${Math.round(pointsCommittedValue).toLocaleString()}</div>
-              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round(pointsCommittedValue / tripBudget * 100)}% of trip value</div>}
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round(pointsCommittedValue / tripBudget * 100)}% of planned trip value</div>}
             </div>
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Credits applied</div>
               <div style={{ fontSize: '15px', fontWeight: '700', color: '#185FA5' }}>${Math.round(creditsValue).toLocaleString()}</div>
-              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round(creditsValue / tripBudget * 100)}% of trip value</div>}
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round(creditsValue / tripBudget * 100)}% of planned trip value</div>}
             </div>
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Cash out of pocket</div>
               <div style={{ fontSize: '15px', fontWeight: '700', color: '#1B2A4A' }}>${Math.round(cashPaid + cashOwed + totalSpent).toLocaleString()}</div>
-              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round((cashPaid + cashOwed + totalSpent) / tripBudget * 100)}% of trip value</div>}
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round((cashPaid + cashOwed + totalSpent) / tripBudget * 100)}% of planned trip value</div>}
             </div>
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Still to plan</div>
@@ -304,7 +304,8 @@ function DashboardTab({ tripId, trip }) {
           'Activities & Tours': '#534AB7',
           'Food & Dining': '#993C1D',
           'Shopping & Souvenirs': '#993556',
-          'Car Rental': '#2E7D9A',
+          'Car Rental & Rideshare': '#2E7D9A',
+          'Transportation': '#1A7A5C',
           'Gas, Tolls & Parking': '#5F5E5A',
           'Insurance': '#3B6D11',
           'Pre-trip & Misc': '#BA7517',
@@ -314,7 +315,7 @@ function DashboardTab({ tripId, trip }) {
         const budget = {};
         expenses.forEach(e => {
           if (!budget[e.category]) budget[e.category] = 0;
-          budget[e.category] += e.estimatedValue != null ? e.estimatedValue : (e.totalValue || 0);
+          if ((e.totalValue || 0) > 0) budget[e.category] += e.estimatedValue != null ? e.estimatedValue : (e.totalValue || 0);
         });
 
         // Actual — paid confirmed expenses + all daily spend
@@ -329,7 +330,7 @@ function DashboardTab({ tripId, trip }) {
         // Add daily spend to Food & Dining equivalent categories
         const SPEND_CAT_MAP = {
           'Food & Drinks': 'Food & Dining',
-          'Transportation': 'Gas, Tolls & Parking',
+          'Transportation': 'Transportation',
           'Shopping': 'Shopping & Souvenirs',
           'Activities': 'Activities & Tours',
           'Tips': 'Pre-trip & Misc',
@@ -376,8 +377,8 @@ function DashboardTab({ tripId, trip }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
                       <span style={{ fontWeight: '500', color: '#333' }}>{cat}</span>
                       <span style={{ color: '#888' }}>
-                        {budgetAmt > 0 && <span>Planned: ${Math.round(budgetAmt).toLocaleString()} <span style={{ color: '#aaa' }}>({budgetSharePct}%)</span></span>}
-                        {actualAmt > 0 && <span style={{ marginLeft: '8px', color: over ? '#BA7517' : '#1B2A4A', fontWeight: '600' }}>Actual: ${Math.round(actualAmt).toLocaleString()} <span style={{ color: '#aaa', fontWeight: '400' }}>({actualSharePct}%)</span>{over ? ' ⚠' : ''}</span>}
+                        {budgetAmt > 0 && <span>Planned: ${Math.round(budgetAmt).toLocaleString()} <span style={{ color: '#aaa' }}>({isComplete ? Math.round(budgetAmt / Object.values(actual).reduce((s,v)=>s+v,0) * 100) : budgetSharePct}% of {isComplete ? 'actual' : 'planned'})</span></span>}
+                        {actualAmt > 0 && <span style={{ marginLeft: '8px', color: over ? '#BA7517' : '#1B2A4A', fontWeight: '600' }}>Actual: ${Math.round(actualAmt).toLocaleString()} <span style={{ color: '#aaa', fontWeight: '400' }}>({isComplete ? actualSharePct : Math.round(actualAmt / tripBudget * 100)}% of {isComplete ? 'actual spend' : 'planned'})</span>{over ? ' ⚠' : ''}</span>}
                       </span>
                     </div>
                     {/* Budget bar */}
