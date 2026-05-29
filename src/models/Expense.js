@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
-  type: { type: String, enum: ['cash', 'pointsBooking', 'cashOffsetByPoints', 'credit', 'pointsStatementCredit'] },
+  type: { type: String, enum: ['cashCard', 'awardBooking', 'awardBookingWithFees', 'portalBooking', 'statementCredit', 'creditVoucher'] },
   dueDate: String,
   paid: { type: Boolean, default: false },
   // cash

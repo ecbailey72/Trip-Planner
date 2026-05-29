@@ -114,7 +114,7 @@ function PointsTab({ tripId, expenses = [] }) {
     expenses.forEach(expense => {
       if (expense.payments) {
         expense.payments.forEach(p => {
-          if ((p.type === 'pointsBooking' || p.type === 'cashOffsetByPoints' || p.type === 'pointsStatementCredit') && p.pointsProgram === program) {
+          if ((p.type === 'awardBooking' || p.type === 'awardBookingWithFees' || p.type === 'statementCredit') && p.pointsProgram === program) {
             committed += p.pointsAmount || 0;
           }
         });
@@ -150,7 +150,7 @@ function PointsTab({ tripId, expenses = [] }) {
     expenses.forEach(expense => {
       if (expense.payments) {
         expense.payments.forEach(p => {
-          if ((p.type === 'pointsBooking' || p.type === 'cashOffsetByPoints' || p.type === 'pointsStatementCredit') && p.pointsProgram === program) {
+          if ((p.type === 'awardBooking' || p.type === 'awardBookingWithFees' || p.type === 'statementCredit') && p.pointsProgram === program) {
             payments.push({ ...p, expenseName: expense.name, expenseValue: expense.totalValue });
           }
         });
@@ -191,7 +191,7 @@ function PointsTab({ tripId, expenses = [] }) {
         {(() => {
           const allPayments = accounts.flatMap(a => getPointsPayments(a.program));
           const totalPts = allPayments.reduce((sum, p) => sum + (p.pointsAmount || 0), 0);
-          const totalVal = allPayments.reduce((sum, p) => sum + (p.type === 'pointsBooking' ? (p.expenseValue || 0) : (p.chargeAmount || 0)), 0);
+          const totalVal = allPayments.reduce((sum, p) => sum + (p.type === 'awardBooking' ? (p.expenseValue || 0) : (p.chargeAmount || 0)), 0);
           const avgCpp = totalPts > 0 ? calcCpp(totalVal, totalPts) : 0;
           const good = avgCpp >= benchmark;
           return (
@@ -419,7 +419,7 @@ function PointsTab({ tripId, expenses = [] }) {
                       </thead>
                       <tbody>
                         {payments.map((p, idx) => {
-                          const value = p.type === 'pointsBooking' ? p.expenseValue : p.type === 'pointsStatementCredit' ? p.amount : p.chargeAmount;
+                          const value = p.type === 'awardBooking' ? p.expenseValue : p.type === 'statementCredit' ? p.amount : p.chargeAmount;
                           const cpp = calcCpp(value || 0, p.pointsAmount || 0);
                           const cppGood = cpp >= benchmark;
                           return (
@@ -446,12 +446,12 @@ function PointsTab({ tripId, expenses = [] }) {
                             {payments.reduce((sum, p) => sum + (p.pointsAmount || 0), 0).toLocaleString()}
                           </td>
                           <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: '600' }}>
-                            ${payments.reduce((sum, p) => sum + (p.type === 'pointsBooking' ? (p.expenseValue || 0) : (p.chargeAmount || 0)), 0).toLocaleString()}
+                            ${payments.reduce((sum, p) => sum + (p.type === 'awardBooking' ? (p.expenseValue || 0) : (p.chargeAmount || 0)), 0).toLocaleString()}
                           </td>
                           <td style={{ padding: '8px 0', textAlign: 'right' }}>
                             {(() => {
                               const totalPts = payments.reduce((sum, p) => sum + (p.pointsAmount || 0), 0);
-                              const totalVal = payments.reduce((sum, p) => sum + (p.type === 'pointsBooking' ? (p.expenseValue || 0) : (p.chargeAmount || 0)), 0);
+                              const totalVal = payments.reduce((sum, p) => sum + (p.type === 'awardBooking' ? (p.expenseValue || 0) : (p.chargeAmount || 0)), 0);
                               const avgCpp = totalPts > 0 ? calcCpp(totalVal, totalPts) : 0;
                               const good = avgCpp >= benchmark;
                               return avgCpp > 0 ? (

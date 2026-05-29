@@ -15,11 +15,13 @@ const EVENT_STATUS = [
 ];
 
 const PAYMENT_TYPES = [
-  { value: 'cash', label: 'Cash or card' },
-  { value: 'pointsBooking', label: 'Points — Direct booking' },
-  { value: 'cashOffsetByPoints', label: 'Partial points redemption' },
-  { value: 'credit', label: 'Account credit or voucher' },
-  { value: 'pointsStatementCredit', label: 'Points — Statement credit' }
+  { value: 'cashCard', label: 'Cash / Card' },
+  { value: 'awardBooking', label: 'Award Booking (Points)' },
+  { value: 'awardBookingWithFees', label: 'Award Booking + Fees (Points + Card)' },
+  { value: 'portalBooking', label: 'Points Portal Booking' },
+  { value: 'statementCredit', label: 'Statement Credit' },
+  { value: 'creditVoucher', label: 'Credit / Voucher' },
+  { value: 'statementCredit', label: 'Statement Credit' }
 ];
 
 const PROGRAMS = [
@@ -53,8 +55,34 @@ const emptyPayment = {
   notes: ''
 };
 
-function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD', exchangeRate = 1 }) {
-  const update = (field, value) => onChange(index, { ...payment, [field]: value });
+const PAYMENT_TYPE_HINTS = {
+  cashCard: 'Paid directly with a credit or debit card. No points involved.',
+  awardBooking: 'Booked entirely with miles or points — e.g. ANA award flight, Hilton free night.',
+  awardBookingWithFees: 'Points cover a portion of the booking value. The remainder — including any taxes, fees, or uncovered balance — is charged to your card.',
+  portalBooking: 'Booked through Capital One Travel, Chase Travel, etc. Card charged, then points offset it.',
+  statementCredit: 'Points applied as a statement credit against a card charge after the fact.',
+  creditVoucher: 'Airline voucher, hotel credit, gift card, or travel agency credit.',
+};
+
+function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD', exchangeRate = 1, totalValue = 0 }) {
+  const update = (field, value) => {
+    const updated = { ...payment, [field]: value };
+    // Auto-calc net cash out for awardBookingWithFees and portalBooking
+    if (field === 'chargeAmount' || field === 'pointsAmount' || field === 'localChargeAmount' || field === 'type') {
+      const type = updated.type;
+      const charge = parseFloat(updated.chargeAmount) || 0;
+      const pts = parseFloat(updated.pointsAmount) || 0;
+      if (type === 'awardBookingWithFees') {
+        // Points cover flight value, card charge IS the cash out (taxes/fees)
+        updated.netCashOut = charge;
+      } else if (type === 'portalBooking') {
+        // Points offset the card charge at 1cpp
+        const pointsValue = parseFloat((pts * 0.01).toFixed(2));
+        updated.netCashOut = charge > pointsValue ? parseFloat((charge - pointsValue).toFixed(2)) : 0;
+      }
+    }
+    onChange(index, updated);
+  };
   const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
 
   return (
@@ -71,7 +99,12 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
             style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
             {PAYMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          {(payment.type === 'pointsBooking' || payment.type === 'cashOffsetByPoints') && (
+          {payment.type && PAYMENT_TYPE_HINTS[payment.type] && (
+            <div style={{ fontSize: '11px', color: '#1A7A5C', marginTop: '5px', padding: '6px 8px', background: '#E1F5EE', borderRadius: '6px', lineHeight: '1.4' }}>
+              {PAYMENT_TYPE_HINTS[payment.type]}
+            </div>
+          )}
+          {(payment.type === 'awardBooking' || payment.type === 'awardBookingWithFees' || payment.type === 'portalBooking' || payment.type === 'statementCredit') && (
             <div style={{ fontSize: '11px', color: '#BA7517', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
               💡 This will appear in your <strong>Points tab</strong> as committed spend.
             </div>
@@ -90,7 +123,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
         </div>
 
         {/* CASH */}
-        {payment.type === 'cash' && (
+        {payment.type === 'cashCard' && (
           <>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Amount ($)</label>
@@ -122,7 +155,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
         )}
 
         {/* POINTS BOOKING */}
-        {payment.type === 'pointsBooking' && (
+        {payment.type === 'awardBooking' && (
           <>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program</label>
@@ -150,7 +183,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
         )}
 
         {/* POINTS STATEMENT CREDIT */}
-        {payment.type === 'pointsStatementCredit' && (
+        {payment.type === 'statementCredit' && (
           <>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program</label>
@@ -179,48 +212,86 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
         )}
 
         {/* CASH OFFSET BY POINTS */}
-        {payment.type === 'cashOffsetByPoints' && (
+        {payment.type === 'awardBookingWithFees' && (
           <>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Amount covered by points ($)</label>
-              <input type="number" value={payment.chargeAmount} onChange={e => update('chargeAmount', e.target.value)}
-                placeholder="Amount on statement" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '2px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '600', color: '#BA7517', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Points — covers flight/hotel value</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program</label>
+                  <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                    <option value="">Select program</option>
+                    {PROGRAMS.map(p => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points to apply</label>
+                  <input type="number" value={payment.pointsAmount} onChange={e => update('pointsAmount', e.target.value)}
+                    placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Value of points ($)</label>
+                  <input type="number" value={payment.pointsValue || ''} onChange={e => {
+                    const pv = parseFloat(e.target.value) || 0;
+                    const net = totalValue > 0 ? parseFloat(Math.max(0, totalValue - pv).toFixed(2)) : 0;
+                    onChange(index, { ...payment, pointsValue: e.target.value, netCashOut: net });
+                  }} placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points applied date</label>
+                  <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                </div>
+              </div>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card used</label>
-              <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                {METHODS.map(m => <option key={m}>{m}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program</label>
-              <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                <option value="">Select program</option>
-                {PROGRAMS.map(p => <option key={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points to apply</label>
-              <input type="number" value={payment.pointsAmount} onChange={e => update('pointsAmount', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points applied date</label>
-              <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Net cash out ($)</label>
-              <input type="number" value={payment.netCashOut} onChange={e => update('netCashOut', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '4px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '600', color: '#185FA5', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Card charge — remaining balance &amp; fees</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card used</label>
+                  <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                    {METHODS.map(m => <option key={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>
+                    Remainder charged to card ($)
+                    <span style={{ fontWeight: '400', color: '#8A9AB5', marginLeft: '4px' }}>— auto-calculated</span>
+                  </label>
+                  <input type="number" value={payment.netCashOut}
+                    onChange={e => {
+                      const val = e.target.value;
+                      const calc = totalValue > 0 ? parseFloat(Math.max(0, totalValue - (parseFloat(payment.pointsValue) || 0)).toFixed(2)) : 0;
+                      const net = val === '' || parseFloat(val) === 0 ? calc : parseFloat(val);
+                      onChange(index, { ...payment, netCashOut: net, localNetCashOut: '' });
+                    }}
+                    placeholder="0"
+                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc', MozAppearance: 'textfield' }} />
+                  {isInternational && (
+                    <div style={{ marginTop: '5px' }}>
+                      <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
+                      <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
+                        <input type="number" value={payment.localNetCashOut || ''} onChange={e => {
+                          const local = parseFloat(e.target.value) || 0;
+                          const calc = totalValue > 0 ? parseFloat(Math.max(0, totalValue - (parseFloat(payment.pointsValue) || 0)).toFixed(2)) : 0;
+                          const usd = local > 0 ? parseFloat((local / exchangeRate).toFixed(2)) : calc;
+                          onChange(index, { ...payment, localNetCashOut: local > 0 ? local : '', netCashOut: usd });
+                        }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1', MozAppearance: 'textfield' }} />
+                        {payment.localNetCashOut > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(payment.netCashOut || 0).toFixed(2)}</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </>
         )}
 
         {/* CREDIT */}
-        {payment.type === 'credit' && (
+        {payment.type === 'creditVoucher' && (
           <>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Credit source</label>
@@ -364,15 +435,15 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
   const statusLabel = (s) => ({ prepaid: 'Prepaid', payOnSite: 'Pay on site', optional: 'Optional', planned: 'Budget estimate' }[s] || s);
 
   const paymentSummary = (p) => {
-    if (p.type === 'cash') return `$${p.amount || 0} · ${p.method || ''}${p.paid ? ' · ✓ Paid' : ''}`;
-    if (p.type === 'pointsBooking') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts${p.paid ? ' · ✓ Applied' : ''}`;
-    if (p.type === 'cashOffsetByPoints') return `$${p.chargeAmount || 0} charge · ${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.netCashOut || 0} net cash${p.paid ? ' · ✓ Paid' : ''}`;
-    if (p.type === 'credit') return `$${p.creditAmount || 0} ${p.creditSource || ''} credit · $${p.remainingCash || 0} remaining${p.paid ? ' · ✓ Applied' : ''}`;
+    if (p.type === 'cashCard') return `$${p.amount || 0} · ${p.method || ''}${p.paid ? ' · ✓ Paid' : ''}`;
+    if (p.type === 'awardBooking') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts${p.paid ? ' · ✓ Applied' : ''}`;
+    if (p.type === 'awardBookingWithFees') return `$${p.chargeAmount || 0} charge · ${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.netCashOut || 0} net cash${p.paid ? ' · ✓ Paid' : ''}`;
+    if (p.type === 'creditVoucher') return `$${p.creditAmount || 0} ${p.creditSource || ''} credit · $${p.remainingCash || 0} remaining${p.paid ? ' · ✓ Applied' : ''}`;
     return '';
   };
 
-  const paymentTypeLabel = (t) => ({ cash: 'Cash', pointsBooking: 'Points booking', cashOffsetByPoints: 'Cash + points', credit: 'Credit' }[t] || t);
-  const paymentTypeColor = (t) => ({ cash: '#555', pointsBooking: '#BA7517', cashOffsetByPoints: '#534AB7', credit: '#185FA5' }[t] || '#555');
+  const paymentTypeLabel = (t) => ({ cashCard: 'Cash/Card', awardBooking: 'Award Booking', awardBookingWithFees: 'Award + Fees', portalBooking: 'Portal Booking', statementCredit: 'Statement Credit', creditVoucher: 'Credit/Voucher' }[t] || t);
+  const paymentTypeColor = (t) => ({ cashCard: '#555', awardBooking: '#BA7517', awardBookingWithFees: '#534AB7', portalBooking: '#185FA5', statementCredit: '#1A7A5C', creditVoucher: '#993C1D' }[t] || '#555');
 
   return (
     <div>
@@ -500,7 +571,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
                 </button>
               </div>
               {payments.map((p, i) => (
-                <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} />
+                <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
               ))}
             </div>
           )}
@@ -646,7 +717,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
                           </button>
                         </div>
                         {payments.map((p, i) => (
-                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} />
+                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -764,7 +835,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
                           </button>
                         </div>
                         {payments.map((p, i) => (
-                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} />
+                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
