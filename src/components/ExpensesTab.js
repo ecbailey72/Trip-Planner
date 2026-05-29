@@ -586,6 +586,20 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
                           <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Final / actual value ($)</label>
                           <input type="number" value={form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
                             style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                          {isInternational && (
+                            <div style={{ marginTop: '5px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
+                              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
+                                <input type="number" value={form.localAmount || ''} onChange={e => {
+                                  const local = parseFloat(e.target.value) || '';
+                                  const usd = local ? (local / exchangeRate).toFixed(2) : '';
+                                  setForm({ ...form, localAmount: local, localCurrency, totalValue: usd });
+                                }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                                {form.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(form.totalValue || 0).toFixed(2)}</span>}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div>
                           <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote ($) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
@@ -689,17 +703,50 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
                           </select>
                         </div>
                         <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Estimated amount ($)</label>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount ($)' : 'Final / actual value ($)'}</label>
                           <input type="number" value={form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                          {isInternational && (
+                            <div style={{ marginTop: '5px' }}>
+                              <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
+                              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
+                                <input type="number" value={form.localAmount || ''} onChange={e => {
+                                  const local = parseFloat(e.target.value) || '';
+                                  const usd = local ? (local / exchangeRate).toFixed(2) : '';
+                                  setForm({ ...form, localAmount: local, localCurrency, totalValue: usd });
+                                }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+                                {form.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(form.totalValue || 0).toFixed(2)}</span>}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote ($) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
+                          <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
                             style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
                         </div>
                         <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Activity date</label>
+                          <input type="date" value={form.activityDate} onChange={e => setForm({ ...form, activityDate: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Vendor</label>
+                          <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Confirmation #</label>
+                          <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
                           <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Notes</label>
                           <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
                             rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
                         </div>
                       </div>
-                      {/* Expense type */}
                       <div style={{ marginBottom: '12px' }}>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense type</label>
                         <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
@@ -708,7 +755,6 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
                           <option value="confirmed">Confirmed</option>
                         </select>
                       </div>
-                      {/* Payments section */}
                       <div style={{ marginBottom: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                           <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payments</h4>
