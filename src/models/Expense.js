@@ -43,6 +43,7 @@ const expenseSchema = new mongoose.Schema({
   notes: String,
   localAmount: Number,
   localCurrency: String,
+  exchangeRate: { type: Number, default: 1 },
   payments: [paymentSchema]
 }, { timestamps: true });
 

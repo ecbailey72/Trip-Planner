@@ -28,7 +28,7 @@ const PAYMENT_TYPES = [
 const METHODS = ['Capital One card', 'Chase Sapphire', 'Cash', 'Debit', 'Other'];
 
 const emptyPayment = {
-  type: 'cash',
+  type: 'cashCard',
   dueDate: '',
   paid: false,
   amount: '',
@@ -399,7 +399,10 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
         estimatedValue: expense.estimatedValue || '',
         activityDate: expense.activityDate || '', bookedDate: expense.bookedDate || '',
         vendor: expense.vendor || '', confirmationNumber: expense.confirmationNumber || '',
-        notes: expense.notes || ''
+        notes: expense.notes || '',
+        localAmount: expense.localAmount || '',
+        localCurrency: expense.localCurrency || '',
+        exchangeRate: expense.exchangeRate || exchangeRate
       });
       setPayments(expense.payments && expense.payments.length > 0 ? expense.payments : [{ ...emptyPayment }]);
     } else {
@@ -423,9 +426,11 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
 
   const handleSave = async () => {
     if (!form.name) return alert('Please enter an expense name');
+    const isPaidConfirmed = form.type === 'confirmed' && payments.some(p => p.paid);
     const dataToSave = {
       ...form,
       eventStatus: form.eventStatus,
+      exchangeRate: isPaidConfirmed ? exchangeRate : (form.exchangeRate || exchangeRate),
       payments: form.type === 'confirmed' ? payments : []
     };
     try {
@@ -601,7 +606,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                 </button>
               </div>
               {payments.map((p, i) => (
-                <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
+                <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={form.exchangeRate || exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
               ))}
             </div>
           )}
@@ -747,7 +752,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                           </button>
                         </div>
                         {payments.map((p, i) => (
-                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
+                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={form.exchangeRate || exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -865,7 +870,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                           </button>
                         </div>
                         {payments.map((p, i) => (
-                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
+                          <PaymentForm key={i} payment={p} index={i} onChange={handlePaymentChange} onRemove={handlePaymentRemove} localCurrency={localCurrency} exchangeRate={form.exchangeRate || exchangeRate} totalValue={parseFloat(form.totalValue) || 0} />
                         ))}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
