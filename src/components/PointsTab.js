@@ -1,17 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { PROGRAMS } from '../constants';
 
 const API = process.env.REACT_APP_API_URL || '/api';
 
-const PROGRAMS = [
-  '── Credit Cards ──', 'Capital One', 'Chase', 'Amex', 'Citi',
-  '── Airlines ──', 'Delta Skymiles', 'AA Advantage', 'United MileagePlus', 'American Airlines', 'Virgin', 'Flying Blue', 'AeroMexico',
-  '── Hotels ──', 'Marriott Bonvoy', 'Hilton Honors', 'Hyatt', 'Wyndham', 'Choice',
-  '── Car Rentals ──', 'Hertz', 'National', 'Enterprise', 'Avis',
-  '── Travel Platforms ──', 'Viator', 'Expedia', 'hotels.com', 'VRBO', 'booking.com', 'Priceline', 'Orbitz', 'trip.com', 'AirBnB',
-  '── Cruises ──', 'Carnival', 'Royal Caribbean', 'Norwegian', 'Disney Cruise', 'Princess', 'Celebrity',
-  '── Other ──', 'Priority Pass', 'Other'
-];
+
 
 const emptyForm = {
   program: 'Capital One',

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { PROGRAMS } from '../constants';
 
 const API = process.env.REACT_APP_API_URL || '/api';
 
@@ -20,19 +21,10 @@ const PAYMENT_TYPES = [
   { value: 'awardBookingWithFees', label: 'Award Booking + Fees (Points + Card)' },
   { value: 'portalBooking', label: 'Points Portal Booking' },
   { value: 'statementCredit', label: 'Statement Credit' },
-  { value: 'creditVoucher', label: 'Credit / Voucher' },
-  { value: 'statementCredit', label: 'Statement Credit' }
+  { value: 'creditVoucher', label: 'Credit / Voucher' }
 ];
 
-const PROGRAMS = [
-  '── Credit Cards ──', 'Capital One', 'Chase', 'Amex', 'Citi',
-  '── Airlines ──', 'Delta Skymiles', 'AA Advantage', 'United MileagePlus', 'American Airlines', 'Virgin', 'Flying Blue', 'AeroMexico',
-  '── Hotels ──', 'Marriott Bonvoy', 'Hilton Honors', 'Hyatt', 'Wyndham', 'Choice',
-  '── Car Rentals ──', 'Hertz', 'National', 'Enterprise', 'Avis',
-  '── Travel Platforms ──', 'Viator', 'Expedia', 'hotels.com', 'VRBO', 'booking.com', 'Priceline', 'Orbitz', 'trip.com', 'AirBnB',
-  '── Cruises ──', 'Carnival', 'Royal Caribbean', 'Norwegian', 'Disney Cruise', 'Princess', 'Celebrity',
-  '── Other ──', 'Priority Pass', 'Other'
-];
+
 const METHODS = ['Capital One card', 'Chase Sapphire', 'Cash', 'Debit', 'Other'];
 
 const emptyPayment = {
@@ -57,11 +49,11 @@ const emptyPayment = {
 
 const PAYMENT_TYPE_HINTS = {
   cashCard: 'Paid directly with a credit or debit card. No points involved.',
-  awardBooking: 'Booked entirely with miles or points — e.g. ANA award flight, Hilton free night.',
+  awardBooking: 'Booked directly with an airline or hotel using miles or points — e.g. ANA award flight, Hilton free night certificate.',
   awardBookingWithFees: 'Points cover a portion of the booking value. The remainder — including any taxes, fees, or uncovered balance — is charged to your card.',
-  portalBooking: 'Booked through Capital One Travel, Chase Travel, etc. Card charged, then points offset it.',
+  portalBooking: 'Booked through a credit card travel portal using points or an annual travel credit — e.g. Capital One Travel, Chase Travel.',
   statementCredit: 'Points applied as a statement credit against a card charge after the fact.',
-  creditVoucher: 'Airline voucher, hotel credit, gift card, or travel agency credit.',
+  creditVoucher: 'A dollar-value credit or voucher from a travel agency, booking site (Expedia, Viator, etc.), or other non-points source. Not for airline miles or hotel points — use Award Booking for those.',
 };
 
 function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD', exchangeRate = 1, totalValue = 0 }) {
@@ -182,7 +174,36 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
           </>
         )}
 
-        {/* POINTS STATEMENT CREDIT */}
+        {/* PORTAL BOOKING */}
+        {payment.type === 'portalBooking' && (
+          <>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program / portal</label>
+              <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
+                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                <option value="">Select program</option>
+                {PROGRAMS.map(p => <option key={p} disabled={p.startsWith('──')}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points / credits used</label>
+              <input type="number" value={payment.pointsAmount} onChange={e => update('pointsAmount', e.target.value)}
+                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Value redeemed ($)</label>
+              <input type="number" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value)}
+                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date redeemed</label>
+              <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
+                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            </div>
+          </>
+        )}
+
+        {/* STATEMENT CREDIT */}
         {payment.type === 'statementCredit' && (
           <>
             <div>
@@ -190,7 +211,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
               <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
                 style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
                 <option value="">Select program</option>
-                {PROGRAMS.map(p => <option key={p}>{p}</option>)}
+                {PROGRAMS.map(p => <option key={p} disabled={p.startsWith('──')}>{p}</option>)}
               </select>
             </div>
             <div>
@@ -199,9 +220,16 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Statement credit value ($)</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Credit value ($)</label>
               <input type="number" value={payment.amount} onChange={e => update('amount', e.target.value)}
-                placeholder="Dollar value of credit" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                placeholder="Dollar value of credit applied" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card the credit applied to</label>
+              <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
+                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                {METHODS.map(m => <option key={m}>{m}</option>)}
+              </select>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date applied</label>
@@ -625,7 +653,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
                       )}
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
-                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}{expense.localAmount > 0 && <span style={{ fontSize: '13px', color: '#8A9AB5', fontWeight: '400', marginLeft: '6px' }}>({expense.localCurrency} {Math.round(expense.localAmount).toLocaleString()})</span>}</div>
+                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}{expense.localAmount >= 1 && expense.localCurrency && expense.localCurrency !== 'USD' && <span style={{ fontSize: '13px', color: '#8A9AB5', fontWeight: '400', marginLeft: '6px' }}>({expense.localCurrency} {Math.round(expense.localAmount).toLocaleString()})</span>}</div>
                       {expense.estimatedValue != null && expense.estimatedValue !== '' && expense.estimatedValue !== expense.totalValue && (
                         <div style={{ fontSize: '11px', marginBottom: '4px', color: expense.totalValue > expense.estimatedValue ? '#A32D2D' : '#1A7A5C', fontWeight: '600' }}>
                           {expense.totalValue > expense.estimatedValue ? '▲' : '▼'} ${Math.abs(Math.round(expense.totalValue - expense.estimatedValue)).toLocaleString()} vs ${Math.round(expense.estimatedValue).toLocaleString()} est.
@@ -746,7 +774,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
                       <div style={{ fontSize: '12px', color: '#888' }}>{expense.category}{expense.notes && ` · ${expense.notes}`}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
-                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}{expense.localAmount > 0 && <span style={{ fontSize: '13px', color: '#8A9AB5', fontWeight: '400', marginLeft: '6px' }}>({expense.localCurrency} {Math.round(expense.localAmount).toLocaleString()})</span>}</div>
+                      <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}{expense.localAmount >= 1 && expense.localCurrency && expense.localCurrency !== 'USD' && <span style={{ fontSize: '13px', color: '#8A9AB5', fontWeight: '400', marginLeft: '6px' }}>({expense.localCurrency} {Math.round(expense.localAmount).toLocaleString()})</span>}</div>
                       {expense.estimatedValue != null && expense.estimatedValue !== '' && expense.estimatedValue !== expense.totalValue && (
                         <div style={{ fontSize: '11px', marginBottom: '4px', color: expense.totalValue > expense.estimatedValue ? '#A32D2D' : '#1A7A5C', fontWeight: '600' }}>
                           {expense.totalValue > expense.estimatedValue ? '▲' : '▼'} ${Math.abs(Math.round(expense.totalValue - expense.estimatedValue)).toLocaleString()} vs ${Math.round(expense.estimatedValue).toLocaleString()} est.
