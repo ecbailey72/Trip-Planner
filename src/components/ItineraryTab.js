@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_API_URL || '/api';
@@ -26,6 +26,8 @@ const STATUS_OPTIONS = [
   { value: 'placeholder', label: 'Placeholder / tentative' },
   { value: 'prepaid',   label: 'Confirmed & prepaid' },
   { value: 'payOnSite', label: 'Confirmed & pay on site' },
+  { value: 'payLater',  label: 'Confirmed & pay later' },
+  { value: 'free',      label: 'Confirmed — free' },
   { value: 'optional',  label: 'Optional' },
 ];
 
@@ -38,10 +40,19 @@ const emptyForm = {
 function ItineraryTab({ tripId, trip }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef(0);
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [inlineFormDay, setInlineFormDay] = useState(null); // date string for inline add
   const [inlineEditId, setInlineEditId] = useState(null); // event._id for inline edit
+
+  // Restore scroll position after form close
+  useEffect(() => {
+    if (!showForm && !inlineEditId && scrollRef.current > 0) {
+      window.scrollTo(0, scrollRef.current);
+      scrollRef.current = 0;
+    }
+  }, [showForm, inlineEditId]);
   const [activeDay, setActiveDay] = useState('all');
   const [form, setForm] = useState(emptyForm);
 
@@ -74,6 +85,8 @@ function ItineraryTab({ tripId, trip }) {
     const statusBadge = (s) => {
       if (s === 'prepaid') return '<span style="font-size:10px;background:#e8f5e9;color:#2e7d32;padding:1px 6px;border-radius:10px;font-weight:600;">✓ Confirmed</span>';
       if (s === 'payOnSite') return '<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:10px;font-weight:600;">Pay on site</span>';
+      if (s === 'payLater') return '<span style="font-size:10px;background:#f3e5f5;color:#7b1fa2;padding:1px 6px;border-radius:10px;font-weight:600;">Pay later</span>';
+      if (s === 'free') return '<span style="font-size:10px;background:#e8f5e9;color:#2e7d32;padding:1px 6px;border-radius:10px;font-weight:600;">✓ Free</span>';
       if (s === 'optional') return '<span style="font-size:10px;background:#f5f5f5;color:#888;padding:1px 6px;border-radius:10px;">Optional</span>';
       if (s === 'placeholder') return '<span style="font-size:10px;background:#fff8e1;color:#f57f17;padding:1px 6px;border-radius:10px;">Tentative</span>';
       return '';
@@ -263,6 +276,7 @@ function ItineraryTab({ tripId, trip }) {
       }
       setShowForm(false);
       setEditingEvent(null);
+      scrollRef.current = window.scrollY;
       setInlineFormDay(null);
       setInlineEditId(null);
     } catch (err) {
@@ -295,8 +309,8 @@ function ItineraryTab({ tripId, trip }) {
   const sortedDates = Object.keys(groupedEvents).sort();
   const displayDates = activeDay === 'all' ? sortedDates : sortedDates.filter(d => d === activeDay);
 
-  const statusColor = (s) => ({ placeholder: '#BA7517', prepaid: '#1B2A4A', payOnSite: '#185FA5', optional: '#888' }[s] || '#888');
-  const statusLabel = (s) => ({ placeholder: 'Placeholder', prepaid: 'Prepaid', payOnSite: 'Pay on site', optional: 'Optional' }[s] || s);
+  const statusColor = (s) => ({ placeholder: '#BA7517', prepaid: '#1B2A4A', payOnSite: '#185FA5', payLater: '#7b1fa2', free: '#2e7d32', optional: '#888' }[s] || '#888');
+  const statusLabel = (s) => ({ placeholder: 'Placeholder', prepaid: 'Prepaid', payOnSite: 'Pay on site', payLater: 'Pay later', free: 'Free', optional: 'Optional' }[s] || s);
 
   const formatDate = (dateStr) => {
     const d = new Date(dateStr + 'T12:00:00');
@@ -455,7 +469,7 @@ function ItineraryTab({ tripId, trip }) {
               style={{ padding: '8px 20px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
               {editingEvent ? 'Save changes' : 'Add event'}
             </button>
-            <button onClick={() => { setShowForm(false); setEditingEvent(null); setInlineFormDay(null); setInlineEditId(null); }}
+            <button onClick={() => { scrollRef.current = window.scrollY; setShowForm(false); setEditingEvent(null); setInlineFormDay(null); setInlineEditId(null); }}
               style={{ padding: '8px 20px', background: 'transparent', border: '1px solid #ccc', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
               Cancel
             </button>
@@ -484,11 +498,12 @@ function ItineraryTab({ tripId, trip }) {
                 .map(event => {
                   const ts = EVENT_TYPES[event.type] || EVENT_TYPES.note;
                   const isOptional = event.status === 'optional';
+                  const isPlaceholder = event.status === 'placeholder';
                   return (
                     <React.Fragment key={event._id}>
                     <div style={{
-                      background: 'white',
-                      border: isOptional ? '1.5px dashed #ccc' : '1px solid #e0e0e0',
+                      background: isPlaceholder ? '#fffdf5' : 'white',
+                      border: isPlaceholder ? '1.5px dashed #C9A84C' : isOptional ? '1.5px dashed #ccc' : '1px solid #e0e0e0',
                       borderRadius: '12px',
                       padding: '12px 14px',
                       marginBottom: inlineEditId === event._id ? '0' : '8px',
@@ -511,7 +526,13 @@ function ItineraryTab({ tripId, trip }) {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '2px' }}>{event.title}</div>
+                            <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {event.title}
+                              {event.status === 'placeholder' && <span style={{ fontSize: '10px', background: '#fff8e1', color: '#f57f17', padding: '1px 7px', borderRadius: '10px', fontWeight: '600', flexShrink: 0 }}>Tentative</span>}
+                              {event.status === 'payLater' && <span style={{ fontSize: '10px', background: '#f3e5f5', color: '#7b1fa2', padding: '1px 7px', borderRadius: '10px', fontWeight: '600', flexShrink: 0 }}>Pay later</span>}
+                              {event.status === 'free' && <span style={{ fontSize: '10px', background: '#e8f5e9', color: '#2e7d32', padding: '1px 7px', borderRadius: '10px', fontWeight: '600', flexShrink: 0 }}>✓ Free</span>}
+                              {event.status === 'optional' && <span style={{ fontSize: '10px', background: '#f5f5f5', color: '#888', padding: '1px 7px', borderRadius: '10px', flexShrink: 0 }}>Optional</span>}
+                            </div>
                             {event.subtitle && <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{event.subtitle}</div>}
                           </div>
                           <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -576,7 +597,7 @@ function ItineraryTab({ tripId, trip }) {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
                           <div style={{ gridColumn: '1 / -1' }}>
                             <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Title *</label>
-                            <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} autoFocus
+                            <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
                               style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
                           </div>
                           <div>
@@ -643,7 +664,7 @@ function ItineraryTab({ tripId, trip }) {
                             style={{ padding: '7px 18px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
                             Save changes
                           </button>
-                          <button onClick={() => { setShowForm(false); setEditingEvent(null); setInlineEditId(null); }}
+                          <button onClick={() => { scrollRef.current = window.scrollY; setShowForm(false); setEditingEvent(null); setInlineEditId(null); }}
                             style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #E8E6E1', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', color: '#4A5568' }}>
                             Cancel
                           </button>
@@ -660,7 +681,7 @@ function ItineraryTab({ tripId, trip }) {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
                     <div style={{ gridColumn: '1 / -1' }}>
                       <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Event title *</label>
-                      <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} autoFocus
+                      <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
                         placeholder="e.g. Arrive at hotel"
                         style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
                     </div>

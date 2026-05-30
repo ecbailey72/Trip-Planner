@@ -33,7 +33,7 @@ const expenseSchema = new mongoose.Schema({
     required: true
   },
   type: { type: String, enum: ['confirmed', 'planned'], default: 'confirmed' },
-  eventStatus: { type: String, enum: ['placeholder', 'prepaid', 'payOnSite', 'optional'], default: 'prepaid' },
+  eventStatus: { type: String, enum: ['placeholder', 'prepaid', 'payOnSite', 'payLater', 'optional'], default: 'prepaid' },
   totalValue: { type: Number, default: 0 },
   estimatedValue: { type: Number, default: null },  // original quote/estimate before trip
   activityDate: String,

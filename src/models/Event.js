@@ -15,7 +15,7 @@ const EventSchema = new mongoose.Schema({
   notes: { type: String },
   status: {
     type: String,
-    enum: ['placeholder', 'prepaid', 'payOnSite', 'optional'],
+    enum: ['placeholder', 'prepaid', 'payOnSite', 'payLater', 'free', 'optional'],
     default: 'prepaid'
   },
   linkedExpenseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Expense' },

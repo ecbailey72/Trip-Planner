@@ -12,6 +12,7 @@ const CATEGORIES = [
 const EVENT_STATUS = [
   { value: 'prepaid', label: 'Confirmed & prepaid' },
   { value: 'payOnSite', label: 'Confirmed & pay on site' },
+  { value: 'payLater', label: 'Confirmed & pay later' },
   { value: 'optional', label: 'Optional' }
 ];
 
@@ -372,7 +373,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
   const [inlineEditId, setInlineEditId] = useState(null); // expense._id being edited inline
   const [payments, setPayments] = useState([{ ...emptyPayment }]);
   const [form, setForm] = useState({
-    name: '', category: 'Flights', type: 'planned', eventStatus: 'placeholder',
+    name: '', category: 'Flights', type: 'planned', eventStatus: 'prepaid',
     totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '', localAmount: '', localCurrency: ''
   });
 
@@ -408,7 +409,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
     } else {
       setEditingExpense(null);
       setInlineEditId(null);
-      setForm({ name: '', category: 'Flights', type: 'planned', eventStatus: 'placeholder', totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '', localAmount: '', localCurrency: '' });
+      setForm({ name: '', category: 'Flights', type: 'planned', eventStatus: 'prepaid', totalValue: '', estimatedValue: '', activityDate: '', bookedDate: '', vendor: '', confirmationNumber: '', notes: '', localAmount: '', localCurrency: '' });
       setPayments([{ ...emptyPayment }]);
     }
     setShowForm(true);
@@ -466,8 +467,8 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
   const planned = expenses.filter(e => e.type === 'planned');
   const totalValue = expenses.reduce((sum, e) => sum + (e.totalValue || 0), 0);
 
-  const statusColor = (s) => ({ prepaid: '#1B2A4A', payOnSite: '#185FA5', optional: '#888', planned: '#BA7517' }[s] || '#888');
-  const statusLabel = (s) => ({ prepaid: 'Prepaid', payOnSite: 'Pay on site', optional: 'Optional', planned: 'Budget estimate' }[s] || s);
+  const statusColor = (s) => ({ prepaid: '#1B2A4A', payOnSite: '#185FA5', payLater: '#7b1fa2', optional: '#888', planned: '#BA7517' }[s] || '#888');
+  const statusLabel = (s) => ({ prepaid: 'Prepaid', payOnSite: 'Pay on site', payLater: 'Pay later', optional: 'Optional', planned: 'Budget estimate' }[s] || s);
 
   const paymentSummary = (p) => {
     if (p.type === 'cashCard') return `$${p.amount || 0} · ${p.method || ''}${p.paid ? ' · ✓ Paid' : ''}`;
@@ -522,7 +523,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Type</label>
-              <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
+              <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value, eventStatus: e.target.value === 'confirmed' ? (form.eventStatus === 'placeholder' ? 'prepaid' : form.eventStatus) : form.eventStatus })}
                 style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
                 <option value="confirmed">Confirmed expense</option>
                 <option value="planned">Planned estimate</option>
@@ -736,12 +737,21 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                       {/* Expense type */}
                       <div style={{ marginBottom: '12px' }}>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense type</label>
-                        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
+                        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value, eventStatus: e.target.value === 'confirmed' ? (form.eventStatus === 'placeholder' ? 'prepaid' : form.eventStatus) : form.eventStatus })}
                           style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
                           <option value="planned">Planned estimate</option>
                           <option value="confirmed">Confirmed</option>
                         </select>
                       </div>
+                                            {form.type === 'confirmed' && (
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Booking status</label>
+                          <select value={form.eventStatus} onChange={e => setForm({ ...form, eventStatus: e.target.value })}
+                            style={{ width: '50%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                            {EVENT_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                          </select>
+                        </div>
+                      )}
                       {/* Payments section in inline edit */}
                       <div style={{ marginBottom: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -855,7 +865,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                       </div>
                       <div style={{ marginBottom: '12px' }}>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense type</label>
-                        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
+                        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value, eventStatus: e.target.value === 'confirmed' ? (form.eventStatus === 'placeholder' ? 'prepaid' : form.eventStatus) : form.eventStatus })}
                           style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
                           <option value="planned">Planned estimate</option>
                           <option value="confirmed">Confirmed</option>
