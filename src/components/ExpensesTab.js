@@ -363,7 +363,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
   );
 }
 
-function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
+function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpenseChange }) {
   const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -432,9 +432,11 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1 }) {
       if (editingExpense) {
         const res = await axios.put(`${API}/trips/${tripId}/expenses/${editingExpense._id}`, dataToSave);
         setExpenses(expenses.map(e => e._id === editingExpense._id ? res.data : e));
+        if (onExpenseChange) onExpenseChange();
       } else {
         const res = await axios.post(`${API}/trips/${tripId}/expenses`, dataToSave);
         setExpenses([...expenses, res.data]);
+        if (onExpenseChange) onExpenseChange();
       }
       setShowForm(false);
       setEditingExpense(null);
