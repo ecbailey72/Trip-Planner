@@ -50,6 +50,7 @@ function ItineraryTab({ tripId, trip }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(0);
+  const printBtnRef = useRef(null);
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [inlineFormDay, setInlineFormDay] = useState(null); // date string for inline add
@@ -169,7 +170,7 @@ function ItineraryTab({ tripId, trip }) {
 </head>
 <body>
   <div class="no-print" style="margin-bottom: 20px; display: flex; align-items: center; gap: 24px;">
-    <button class="print-btn" onclick="window.print()">🖨 Print itinerary</button>
+    <button class="print-btn" onclick="setTimeout(() => window.print(), 250)">🖨 Print itinerary</button>
     <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #444; cursor: pointer;">
       <input type="checkbox" id="showAllDetails" style="width: 16px; height: 16px; cursor: pointer;">
       Show all details
@@ -231,6 +232,21 @@ function ItineraryTab({ tripId, trip }) {
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
+    // Browser blocks auto-focus on new tabs — notify user instead
+    if (printBtnRef.current) {
+      printBtnRef.current.textContent = '✓ Check your browser tabs';
+      printBtnRef.current.style.background = '#1A7A5C';
+      printBtnRef.current.style.color = 'white';
+      printBtnRef.current.style.border = '1px solid #1A7A5C';
+      setTimeout(() => {
+        if (printBtnRef.current) {
+          printBtnRef.current.textContent = '🖨 Print';
+          printBtnRef.current.style.background = 'transparent';
+          printBtnRef.current.style.color = '#1B2A4A';
+          printBtnRef.current.style.border = '1px solid #E8E6E1';
+        }
+      }, 3000);
+    }
   };
 
   const fetchEvents = async () => {
@@ -359,7 +375,7 @@ function ItineraryTab({ tripId, trip }) {
 
       {/* Add event button */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '1rem' }}>
-        <button onClick={printItinerary}
+        <button ref={printBtnRef} onClick={printItinerary}
           style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #E8E6E1', color: '#1B2A4A', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
           🖨 Print
         </button>
