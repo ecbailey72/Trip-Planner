@@ -285,6 +285,7 @@ function ItineraryTab({ tripId, trip }) {
     if (!form.title) return alert('Please enter a title');
     if (!form.date) return alert('Please enter a date');
     try {
+      const savedEventId = editingEvent?._id;
       if (editingEvent) {
         const res = await axios.put(`${API}/trips/${tripId}/events/${editingEvent._id}`, form);
         setEvents(events.map(e => e._id === editingEvent._id ? res.data : e));
@@ -292,9 +293,9 @@ function ItineraryTab({ tripId, trip }) {
         const res = await axios.post(`${API}/trips/${tripId}/events`, form);
         setEvents([...events, res.data].sort((a, b) => a.date.localeCompare(b.date) || timeToMinutes(a.startTime) - timeToMinutes(b.startTime)));
       }
+      scrollRef.current = savedEventId;
       setShowForm(false);
       setEditingEvent(null);
-      scrollRef.current = window.scrollY;
       setInlineFormDay(null);
       setInlineEditId(null);
     } catch (err) {
