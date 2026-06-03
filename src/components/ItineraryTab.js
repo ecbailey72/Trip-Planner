@@ -3,6 +3,15 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_API_URL || '/api';
 
+const timeToMinutes = (t) => {
+  if (!t) return 9999;
+  const [time, period] = t.split(' ');
+  let [h, m] = time.split(':').map(Number);
+  if (period === 'PM' && h !== 12) h += 12;
+  if (period === 'AM' && h === 12) h = 0;
+  return h * 60 + m;
+};
+
 const EVENT_TYPES = {
   flight:         { label: 'Flight',          icon: '✈',  color: '#185FA5', bg: '#E6F1FB' },
   lodging:        { label: 'Lodging',         icon: '🛏', color: '#1B2A4A', bg: '#EEF1F8' },
@@ -46,13 +55,21 @@ function ItineraryTab({ tripId, trip }) {
   const [inlineFormDay, setInlineFormDay] = useState(null); // date string for inline add
   const [inlineEditId, setInlineEditId] = useState(null); // event._id for inline edit
 
-  // Restore scroll position after form close
+  // Scroll inline edit form into view when opened, scroll back to card when closed
   useEffect(() => {
-    if (!showForm && !inlineEditId && scrollRef.current > 0) {
-      window.scrollTo(0, scrollRef.current);
-      scrollRef.current = 0;
+    if (inlineEditId) {
+      setTimeout(() => {
+        const el = document.getElementById(`inline-edit-${inlineEditId}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    } else if (scrollRef.current) {
+      setTimeout(() => {
+        const el = document.getElementById(`event-card-${scrollRef.current}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        scrollRef.current = null;
+      }, 50);
     }
-  }, [showForm, inlineEditId]);
+  }, [inlineEditId]);
   const [activeDay, setActiveDay] = useState('all');
   const [form, setForm] = useState(emptyForm);
 
@@ -171,7 +188,7 @@ function ItineraryTab({ tripId, trip }) {
   </div>`;
 
     dates.forEach(date => {
-      const dayEvents = events.filter(e => e.date === date).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+      const dayEvents = events.filter(e => e.date === date).sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
       const badgeFor = (s) => {
         if (s === 'prepaid') return '<span class="badge-confirmed">✓ Confirmed</span>';
         if (s === 'payOnSite') return '<span class="badge-payonsite">Pay on site</span>';
@@ -228,6 +245,7 @@ function ItineraryTab({ tripId, trip }) {
   };
 
   const openForm = (event = null, date = '') => {
+    scrollRef.current = window.scrollY;
     if (event) {
       setInlineEditId(event._id);
       setInlineFormDay(null);
@@ -272,7 +290,7 @@ function ItineraryTab({ tripId, trip }) {
         setEvents(events.map(e => e._id === editingEvent._id ? res.data : e));
       } else {
         const res = await axios.post(`${API}/trips/${tripId}/events`, form);
-        setEvents([...events, res.data].sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || '').localeCompare(b.startTime || '')));
+        setEvents([...events, res.data].sort((a, b) => a.date.localeCompare(b.date) || timeToMinutes(a.startTime) - timeToMinutes(b.startTime)));
       }
       setShowForm(false);
       setEditingEvent(null);
@@ -494,14 +512,14 @@ function ItineraryTab({ tripId, trip }) {
 
               {/* Events for this day */}
               {groupedEvents[date]
-                .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''))
+                .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
                 .map(event => {
                   const ts = EVENT_TYPES[event.type] || EVENT_TYPES.note;
                   const isOptional = event.status === 'optional';
                   const isPlaceholder = event.status === 'placeholder';
                   return (
                     <React.Fragment key={event._id}>
-                    <div style={{
+                    <div id={`event-card-${event._id}`} style={{
                       background: isPlaceholder ? '#fffdf5' : 'white',
                       border: isPlaceholder ? '1.5px dashed #C9A84C' : isOptional ? '1.5px dashed #ccc' : '1px solid #e0e0e0',
                       borderRadius: '12px',
@@ -593,7 +611,7 @@ function ItineraryTab({ tripId, trip }) {
                     </div>
                     {/* Inline edit form */}
                     {inlineEditId === event._id && showForm && (
-                      <div style={{ background: '#f0f2f8', border: '1px solid #d0d8e8', borderRadius: '0 0 12px 12px', padding: '1rem', marginBottom: '8px' }}>
+                      <div id={`inline-edit-${event._id}`} style={{ background: '#f0f2f8', border: '1px solid #d0d8e8', borderRadius: '0 0 12px 12px', padding: '1rem', marginBottom: '8px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
                           <div style={{ gridColumn: '1 / -1' }}>
                             <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Title *</label>
@@ -664,7 +682,7 @@ function ItineraryTab({ tripId, trip }) {
                             style={{ padding: '7px 18px', background: '#1B2A4A', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
                             Save changes
                           </button>
-                          <button onClick={() => { scrollRef.current = window.scrollY; setShowForm(false); setEditingEvent(null); setInlineEditId(null); }}
+                          <button onClick={() => { scrollRef.current = editingEvent?._id; setShowForm(false); setEditingEvent(null); setInlineEditId(null); }}
                             style={{ padding: '7px 18px', background: 'transparent', border: '1px solid #E8E6E1', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', color: '#4A5568' }}>
                             Cancel
                           </button>
