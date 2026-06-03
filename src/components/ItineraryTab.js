@@ -636,6 +636,11 @@ function ItineraryTab({ tripId, trip }) {
                               style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
                           </div>
                           <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Date</label>
+                            <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })}
+                              style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }} />
+                          </div>
+                          <div>
                             <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#4A5568', marginBottom: '3px' }}>Type</label>
                             <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
                               style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1', outline: 'none' }}>
