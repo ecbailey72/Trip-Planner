@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { getUser } from '../utils/auth';
 import ExpensesTab from '../components/ExpensesTab';
 import ItineraryTab from '../components/ItineraryTab';
 import ChecklistTab from '../components/ChecklistTab';
@@ -33,6 +34,7 @@ function TripDetailPage() {
   const [shareEmail, setShareEmail] = useState('');
   const [shareMessage, setShareMessage] = useState('');
   const [collaborators, setCollaborators] = useState([]);
+  const [tripOwner, setTripOwner] = useState(null);
 
   useEffect(() => {
     fetchTrip();
@@ -52,6 +54,8 @@ function TripDetailPage() {
   const fetchCollaborators = async () => {
     try {
       const res = await axios.get(`${API}/trips/${id}/collaborators`);
+      const ownerRes = await axios.get(`${API}/trips/${id}/owner`);
+      setTripOwner(ownerRes.data);
       setCollaborators(res.data);
     } catch (err) {
       console.error('Error fetching collaborators:', err);
@@ -197,11 +201,17 @@ function TripDetailPage() {
                   Edit trip
                 </button>
               </div>
-              {collaborators.length > 0 && (
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
-                  Shared with: {collaborators.map(c => c.name).join(', ')}
-                </div>
-              )}
+              {collaborators.length > 0 && (() => {
+                const currentUser = getUser();
+                const isOwner = tripOwner && currentUser && tripOwner.email === currentUser.email;
+                return (
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+                    {isOwner
+                      ? `Shared with: ${collaborators.map(c => c.name).join(', ')}`
+                      : `Shared by: ${tripOwner?.name || 'trip owner'}`}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
