@@ -473,7 +473,9 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
   const paymentSummary = (p) => {
     if (p.type === 'cashCard') return `$${p.amount || 0} · ${p.method || ''}${p.paid ? ' · ✓ Paid' : ''}`;
     if (p.type === 'awardBooking') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts${p.paid ? ' · ✓ Applied' : ''}`;
-    if (p.type === 'awardBookingWithFees') return `$${p.chargeAmount || 0} charge · ${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.netCashOut || 0} net cash${p.paid ? ' · ✓ Paid' : ''}`;
+    if (p.type === 'awardBookingWithFees') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.pointsValue || 0} value · $${p.netCashOut || 0} card charge${p.paid ? ' · ✓ Paid' : ''}`;
+    if (p.type === 'portalBooking') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.pointsValue || 0} redeemed${p.paid ? ' · ✓ Applied' : ''}`;
+    if (p.type === 'statementCredit') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.amount || 0} credit${p.paid ? ' · ✓ Applied' : ''}`;
     if (p.type === 'creditVoucher') return `$${p.creditAmount || 0} ${p.creditSource || ''} credit · $${p.remainingCash || 0} remaining${p.paid ? ' · ✓ Applied' : ''}`;
     return '';
   };
