@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { getUser } from '../utils/auth';
 import ExpensesTab from '../components/ExpensesTab';
+import CountrySelector from '../components/CountrySelector';
 import ItineraryTab from '../components/ItineraryTab';
 import ChecklistTab from '../components/ChecklistTab';
 import DailySpendTab from '../components/DailySpendTab';
@@ -219,7 +220,7 @@ function TripDetailPage() {
                       name: trip.name, startDate: trip.startDate || '', endDate: trip.endDate || '',
                       tripBudget: trip.tripBudget || '', dailyBudget: trip.dailyBudget || '',
                       status: trip.status, cppBenchmark: trip.cppBenchmark || 1.5,
-                      country: trip.country || 'United States', localCurrency: trip.localCurrency || 'USD', exchangeRate: trip.exchangeRate || 1
+                      country: trip.country || 'United States', countryCode: trip.countryCode || 'US', localCurrency: trip.localCurrency || 'USD', currencyCode: trip.currencyCode || 'USD', exchangeRate: trip.exchangeRate || 1
                     });
                     setEditingTrip(true);
                   }}
@@ -320,15 +321,28 @@ function TripDetailPage() {
                   <input type="number" step="0.1" value={tripForm.cppBenchmark || ''} onChange={e => setTripForm({ ...tripForm, cppBenchmark: parseFloat(e.target.value) || '' })}
                     placeholder="e.g. 1.5" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Country</label>
-                  <input value={tripForm.country || ''} onChange={e => setTripForm({ ...tripForm, country: e.target.value })}
-                    placeholder="e.g. Japan" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Local currency</label>
-                  <input value={tripForm.localCurrency || ''} onChange={e => setTripForm({ ...tripForm, localCurrency: e.target.value })}
-                    placeholder="e.g. JPY" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Destination country</label>
+                  <CountrySelector
+                    value={tripForm.country || ''}
+                    onChange={country => setTripForm({ ...tripForm,
+                      country: country.name,
+                      countryCode: country.code,
+                      localCurrency: country.currencyCode,
+                      currencyCode: country.currencyCode,
+                      exchangeRate: country.currencyCode === 'USD' ? 1 : tripForm.exchangeRate
+                    })}
+                  />
+                  {tripForm.localCurrency && tripForm.localCurrency !== 'USD' && (
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
+                      Currency auto-set to {tripForm.localCurrency}
+                    </div>
+                  )}
+                  {tripForm.localCurrency === 'USD' && (
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginTop: '4px' }}>
+                      ✓ Domestic trip — no currency conversion needed
+                    </div>
+                  )}
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Exchange rate ({tripForm.localCurrency || 'local'} per USD)</label>
