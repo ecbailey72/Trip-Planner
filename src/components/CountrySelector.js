@@ -5,6 +5,7 @@ export default function CountrySelector({ value, onChange }) {
   const [query, setQuery] = useState(value || '');
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
+  const [error, setError] = useState(false);
   const ref = useRef(null);
 
   const filtered = query.length < 1
@@ -40,11 +41,25 @@ export default function CountrySelector({ value, onChange }) {
       <input
         value={query}
         onChange={e => { setQuery(e.target.value); setOpen(true); setHighlighted(0); }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => { setOpen(true); setError(false); }}
+        onBlur={() => {
+          setTimeout(() => {
+            const match = COUNTRIES.find(c => c.name.toLowerCase() === query.toLowerCase());
+            if (!match && query !== '') {
+              setError(true);
+              // Revert to last valid value
+              setQuery(value || '');
+            } else {
+              setError(false);
+            }
+            setOpen(false);
+          }, 150);
+        }}
         onKeyDown={handleKey}
         placeholder="Search country..."
-        style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', color: '#1a1a1a', background: 'white' }}
+        style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: error ? '1px solid #cc4444' : '1px solid #ccc', boxSizing: 'border-box', color: '#1a1a1a', background: 'white' }}
       />
+      {error && <div style={{ fontSize: '11px', color: '#cc4444', marginTop: '4px' }}>Please select a country from the list.</div>}
       {open && filtered.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000,
