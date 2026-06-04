@@ -32,6 +32,32 @@ function TripDetailPage() {
   const [tripForm, setTripForm] = useState({});
   const [showShare, setShowShare] = useState(false);
   const [shareEmail, setShareEmail] = useState('');
+
+  // Tab bar drag-to-scroll
+  useEffect(() => {
+    const init = () => {
+      const el = document.getElementById('tab-scroll-container');
+      if (!el) return;
+      let isDown = false, startX, scrollLeft;
+      const onMouseDown = (e) => { isDown = true; el.style.cursor = 'grabbing'; startX = e.pageX - el.offsetLeft; scrollLeft = el.scrollLeft; };
+      const onMouseUp = () => { isDown = false; el.style.cursor = 'grab'; };
+      const onMouseLeave = () => { isDown = false; el.style.cursor = 'grab'; };
+      const onMouseMove = (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - el.offsetLeft; const walk = (x - startX) * 1.5; el.scrollLeft = scrollLeft - walk; };
+      el.style.cursor = 'grab';
+      el.addEventListener('mousedown', onMouseDown);
+      el.addEventListener('mouseup', onMouseUp);
+      el.addEventListener('mouseleave', onMouseLeave);
+      el.addEventListener('mousemove', onMouseMove);
+      return () => {
+        el.removeEventListener('mousedown', onMouseDown);
+        el.removeEventListener('mouseup', onMouseUp);
+        el.removeEventListener('mouseleave', onMouseLeave);
+        el.removeEventListener('mousemove', onMouseMove);
+      };
+    };
+    const cleanup = init() || setTimeout(init, 500);
+    return () => { if (typeof cleanup === 'function') cleanup(); };
+  }, [trip]);
   const [shareMessage, setShareMessage] = useState('');
   const [collaborators, setCollaborators] = useState([]);
   const [tripOwner, setTripOwner] = useState(null);
