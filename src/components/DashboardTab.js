@@ -46,15 +46,21 @@ function DashboardTab({ tripId, trip }) {
     e.payments?.forEach(p => {
       if (p.type === 'awardBooking') ptsValue += e.totalValue || 0;
       if (p.type === 'awardBookingWithFees') {
-        ptsValue += (p.pointsAmount || 0) * 0.01;
+        ptsValue += p.pointsValue || 0;
         if (p.paid) cashPaid += p.netCashOut || 0;
         else cashOwed += p.netCashOut || 0;
       }
-      if (p.type === 'cash') {
+      if (p.type === 'cashCard') {
         if (p.paid) cashPaid += p.amount || 0;
         else cashOwed += p.amount || 0;
       }
-      if (p.type === 'credit') {
+      if (p.type === 'portalBooking') {
+        ptsValue += p.pointsValue || 0;
+      }
+      if (p.type === 'statementCredit') {
+        ptsValue += p.amount || 0;
+      }
+      if (p.type === 'creditVoucher') {
         creditsValue += p.creditAmount || 0;
         if (p.paid) cashPaid += p.remainingCash || 0;
         else cashOwed += p.remainingCash || 0;
@@ -78,8 +84,12 @@ function DashboardTab({ tripId, trip }) {
         pointsCommittedValue += e.totalValue || 0; debugPoints.push({name: e.name, type: p.type, added: e.totalValue});
       }
       if (p.type === 'awardBookingWithFees') {
-        // Partial — points covered charge minus net cash out
-        pointsCommittedValue += (e.totalValue || 0) - (p.netCashOut || 0); debugPoints.push({name: e.name, type: p.type, added: (e.totalValue||0)-(p.netCashOut||0)});
+        // Partial — points covered the points value portion
+        pointsCommittedValue += p.pointsValue || 0; debugPoints.push({name: e.name, type: p.type, added: p.pointsValue || 0});
+      }
+      if (p.type === 'portalBooking') {
+        // Portal booking — points redeemed for travel credit
+        pointsCommittedValue += p.pointsValue || 0;
       }
       if (p.type === 'statementCredit') {
         // Statement credit — use dollar value of credit
@@ -92,7 +102,7 @@ function DashboardTab({ tripId, trip }) {
   let creditsCommitted = 0;
   confirmed.forEach(e => {
     e.payments?.forEach(p => {
-      if (p.type === 'credit') creditsCommitted += p.creditAmount || 0;
+      if (p.type === 'creditVoucher') creditsCommitted += p.creditAmount || 0;
     });
   });
 
@@ -104,8 +114,8 @@ function DashboardTab({ tripId, trip }) {
   const unpaidCash = [];
   confirmed.forEach(e => {
     e.payments?.forEach(p => {
-      if (!p.paid && (p.type === 'cash' || p.type === 'awardBookingWithFees') && p.dueDate) {
-        unpaidCash.push({ date: p.dueDate, name: e.name, amount: p.type === 'cash' ? p.amount : p.netCashOut });
+      if (!p.paid && (p.type === 'cashCard' || p.type === 'awardBookingWithFees') && p.dueDate) {
+        unpaidCash.push({ date: p.dueDate, name: e.name, amount: p.type === 'cashCard' ? p.amount : p.netCashOut });
       }
     });
   });
@@ -390,7 +400,7 @@ function DashboardTab({ tripId, trip }) {
                     {/* Actual bar */}
                     {actualAmt > 0 && (
                       <div style={{ height: '5px', background: '#e0e0e0', borderRadius: '3px' }}>
-                        <div style={{ height: '5px', borderRadius: '3px', width: Math.min(100, actualPct) + '%', background: over ? '#BA7517' : color, transition: 'width 0.4s' }} />
+                        <div style={{ height: '5px', borderRadius: '3px', width: Math.min(100, actualPct) + '%', background: over ? '#BA7517' : '#1B2A4A', transition: 'width 0.4s' }} />
                       </div>
                     )}
                   </div>
