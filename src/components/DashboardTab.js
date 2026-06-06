@@ -65,6 +65,9 @@ function DashboardTab({ tripId, trip }) {
         if (p.paid) cashPaid += p.remainingCash || 0;
         else cashOwed += p.remainingCash || 0;
       }
+      if (p.type === 'travelCredit') {
+        creditsValue += p.creditAmount || 0;
+      }
     });
   });
 
@@ -103,6 +106,7 @@ function DashboardTab({ tripId, trip }) {
   confirmed.forEach(e => {
     e.payments?.forEach(p => {
       if (p.type === 'creditVoucher') creditsCommitted += p.creditAmount || 0;
+      if (p.type === 'travelCredit') creditsCommitted += p.creditAmount || 0;
     });
   });
 

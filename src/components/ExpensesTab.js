@@ -22,6 +22,7 @@ const PAYMENT_TYPES = [
   { value: 'awardBookingWithFees', label: 'Award Booking + Fees (Points + Card)' },
   { value: 'portalBooking', label: 'Points Portal Booking' },
   { value: 'statementCredit', label: 'Statement Credit' },
+  { value: 'travelCredit', label: 'Travel Credit (Card Benefit)' },
   { value: 'creditVoucher', label: 'Credit / Voucher' }
 ];
 
@@ -52,8 +53,9 @@ const PAYMENT_TYPE_HINTS = {
   cashCard: 'Paid directly with a credit or debit card. No points involved.',
   awardBooking: 'Booked directly with an airline or hotel using miles or points — e.g. ANA award flight, Hilton free night certificate.',
   awardBookingWithFees: 'Points cover a portion of the booking value. The remainder — including any taxes, fees, or uncovered balance — is charged to your card.',
-  portalBooking: 'Booked through a credit card travel portal using points or an annual travel credit — e.g. Capital One Travel, Chase Travel.',
+  portalBooking: 'Booked through a credit card travel portal using points only — e.g. Capital One Travel, Chase Travel. For annual travel credits, use Travel Credit instead.',
   statementCredit: 'Points applied as a statement credit against a card charge after the fact.',
+  travelCredit: 'An annual travel credit from your credit card — e.g. Capital One Venture X $300, Amex Platinum $200. No points involved — this is a dollar credit from your card benefit.',
   creditVoucher: 'A dollar-value credit or voucher from a travel agency, booking site (Expedia, Viator, etc.), or other non-points source. Not for airline miles or hotel points — use Award Booking for those.',
 };
 
@@ -260,12 +262,13 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                     placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Value of points ($)</label>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Value covered by points ($)</label>
                   <input type="number" value={payment.pointsValue || ''} onChange={e => {
                     const pv = parseFloat(e.target.value) || 0;
                     const net = totalValue > 0 ? parseFloat(Math.max(0, totalValue - pv).toFixed(2)) : 0;
                     onChange(index, { ...payment, pointsValue: e.target.value, netCashOut: net });
                   }} placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                  <div style={{ fontSize: '10px', color: '#8A9AB5', marginTop: '3px' }}>Dollar value your points covered. Tip: Total expense − card charge = points value.</div>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points applied date</label>
@@ -315,6 +318,29 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                   )}
                 </div>
               </div>
+            </div>
+          </>
+        )}
+
+        {/* TRAVEL CREDIT */}
+        {payment.type === 'travelCredit' && (
+          <>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card benefit from</label>
+              <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
+                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                {METHODS.map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Credit amount used ($)</label>
+              <input type="number" value={payment.creditAmount} onChange={e => update('creditAmount', e.target.value)}
+                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date applied</label>
+              <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
+                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
           </>
         )}
@@ -476,12 +502,13 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
     if (p.type === 'awardBookingWithFees') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.pointsValue || 0} value · $${p.netCashOut || 0} card charge${p.paid ? ' · ✓ Paid' : ''}`;
     if (p.type === 'portalBooking') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.pointsValue || 0} redeemed${p.paid ? ' · ✓ Applied' : ''}`;
     if (p.type === 'statementCredit') return `${Number(p.pointsAmount || 0).toLocaleString()} ${p.pointsProgram || ''} pts · $${p.amount || 0} credit${p.paid ? ' · ✓ Applied' : ''}`;
+    if (p.type === 'travelCredit') return `$${p.creditAmount || 0} ${p.cardUsed || ''} travel credit${p.paid ? ' · ✓ Applied' : ''}`;
     if (p.type === 'creditVoucher') return `$${p.creditAmount || 0} ${p.creditSource || ''} credit · $${p.remainingCash || 0} remaining${p.paid ? ' · ✓ Applied' : ''}`;
     return '';
   };
 
-  const paymentTypeLabel = (t) => ({ cashCard: 'Cash/Card', awardBooking: 'Award Booking', awardBookingWithFees: 'Award + Fees', portalBooking: 'Portal Booking', statementCredit: 'Statement Credit', creditVoucher: 'Credit/Voucher' }[t] || t);
-  const paymentTypeColor = (t) => ({ cashCard: '#555', awardBooking: '#BA7517', awardBookingWithFees: '#534AB7', portalBooking: '#185FA5', statementCredit: '#1A7A5C', creditVoucher: '#993C1D' }[t] || '#555');
+  const paymentTypeLabel = (t) => ({ cashCard: 'Cash/Card', awardBooking: 'Award Booking', awardBookingWithFees: 'Award + Fees', portalBooking: 'Portal Booking', statementCredit: 'Statement Credit', travelCredit: 'Travel Credit', creditVoucher: 'Credit/Voucher' }[t] || t);
+  const paymentTypeColor = (t) => ({ cashCard: '#555', awardBooking: '#BA7517', awardBookingWithFees: '#534AB7', portalBooking: '#185FA5', statementCredit: '#1A7A5C', travelCredit: '#1A7A5C', creditVoucher: '#993C1D' }[t] || '#555');
 
   return (
     <div>
