@@ -277,6 +277,26 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 </div>
               </div>
             </div>
+            {totalValue > 0 && (() => {
+              const pv = parseFloat(payment.pointsValue) || 0;
+              const nc = parseFloat(payment.netCashOut) || 0;
+              const accounted = parseFloat((pv + nc).toFixed(2));
+              const gap = parseFloat((totalValue - accounted).toFixed(2));
+              const balanced = Math.abs(gap) < 0.02;
+              return (
+                <div style={{ gridColumn: '1 / -1', margin: '4px 0', padding: '8px 12px', borderRadius: '8px', background: balanced ? '#E1F5EE' : '#FFF3E0', border: `1px solid ${balanced ? '#1A7A5C' : '#BA7517'}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                    <span style={{ color: balanced ? '#1A7A5C' : '#BA7517', fontWeight: '600' }}>
+                      {balanced ? '✓ Payments balanced' : '⚠ Payments don\'t add up'}
+                    </span>
+                    <span style={{ color: '#555', fontSize: '11px' }}>
+                      Points ${pv.toFixed(2)} + Card ${nc.toFixed(2)} = ${accounted.toFixed(2)} / Total ${totalValue.toFixed(2)}
+                      {!balanced && <span style={{ color: '#BA7517', fontWeight: '600', marginLeft: '6px' }}>Gap: ${Math.abs(gap).toFixed(2)}</span>}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
             <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '4px' }}>
               <div style={{ fontSize: '10px', fontWeight: '600', color: '#185FA5', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Card charge — remaining balance &amp; fees</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -292,15 +312,19 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                     Remainder charged to card ($)
                     <span style={{ fontWeight: '400', color: '#8A9AB5', marginLeft: '4px' }}>— auto-calculated</span>
                   </label>
-                  <input type="number" value={payment.netCashOut}
+                  <input type="text" inputMode="decimal" value={payment.netCashOut}
                     onChange={e => {
                       const val = e.target.value;
+                      onChange(index, { ...payment, netCashOut: val, localNetCashOut: '' });
+                    }}
+                    onBlur={e => {
+                      const val = e.target.value;
                       const calc = totalValue > 0 ? parseFloat(Math.max(0, totalValue - (parseFloat(payment.pointsValue) || 0)).toFixed(2)) : 0;
-                      const net = val === '' || parseFloat(val) === 0 ? calc : parseFloat(val);
+                      const net = val === '' || val === '.' ? calc : parseFloat(val) || calc;
                       onChange(index, { ...payment, netCashOut: net, localNetCashOut: '' });
                     }}
                     placeholder="0"
-                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc', MozAppearance: 'textfield' }} />
+                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
                   {isInternational && (
                     <div style={{ marginTop: '5px' }}>
                       <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
@@ -453,6 +477,21 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
 
   const handleSave = async () => {
     if (!form.name) return alert('Please enter an expense name');
+    // Validate awardBookingWithFees payments add up to total value
+    if (form.type === 'confirmed' && form.totalValue) {
+      for (const p of payments) {
+        if (p.type === 'awardBookingWithFees') {
+          const pv = parseFloat(p.pointsValue) || 0;
+          const nc = parseFloat(p.netCashOut) || 0;
+          const accounted = parseFloat((pv + nc).toFixed(2));
+          const gap = Math.abs(parseFloat(form.totalValue) - accounted);
+          if (gap > 0.02) {
+            const proceed = window.confirm(`Payment amounts don't add up:\n\nPoints value: $${pv.toFixed(2)}\nCard charge: $${nc.toFixed(2)}\nTotal accounted: $${accounted.toFixed(2)}\nExpense total: $${parseFloat(form.totalValue).toFixed(2)}\nGap: $${gap.toFixed(2)}\n\nSave anyway?`);
+            if (!proceed) return;
+          }
+        }
+      }
+    }
     const isPaidConfirmed = form.type === 'confirmed' && payments.some(p => p.paid);
     const dataToSave = {
       ...form,
