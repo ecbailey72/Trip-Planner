@@ -9,6 +9,7 @@ function DashboardTab({ tripId, trip }) {
   const [tasks, setTasks] = useState([]);
   const [spending, setSpending] = useState([]);
   const [showPlanningView, setShowPlanningView] = useState(false);
+  const [chartView, setChartView] = useState('tripValue');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -357,13 +358,50 @@ function DashboardTab({ tripId, trip }) {
           actual[mappedCat] += s.amount || 0;
         });
 
+        // Cash out of pocket — only real cash paid (no points value)
+        const cashOnly = {};
+        expenses.filter(e => e.type === 'confirmed').forEach(e => {
+          const paid = e.payments?.some(p => p.paid);
+          if (paid) {
+            e.payments?.forEach(p => {
+              if (!cashOnly[e.category]) cashOnly[e.category] = 0;
+              if (p.type === 'cashCard') cashOnly[e.category] += parseFloat(p.amount) || 0;
+              if (p.type === 'awardBookingWithFees') cashOnly[e.category] += parseFloat(p.netCashOut) || 0;
+              if (p.type === 'portalBooking') cashOnly[e.category] += 0; // fully points
+              if (p.type === 'statementCredit') cashOnly[e.category] += 0; // fully points
+              if (p.type === 'travelCredit') cashOnly[e.category] += 0; // card benefit
+              if (p.type === 'creditVoucher') cashOnly[e.category] += parseFloat(p.remainingCash) || 0;
+            });
+          }
+        });
+        spending.forEach(s => {
+          const mappedCat = SPEND_CAT_MAP[s.category] || 'Pre-trip & Misc';
+          if (!cashOnly[mappedCat]) cashOnly[mappedCat] = 0;
+          cashOnly[mappedCat] += s.amount || 0;
+        });
+
+        const displayActual = chartView === 'cashOnly' ? cashOnly : actual;
+
         // All categories that appear in either
-        const allCats = [...new Set([...Object.keys(budget), ...Object.keys(actual)])];
-        const maxVal = Math.max(...allCats.map(c => Math.max(budget[c] || 0, actual[c] || 0)));
+        const allCats = [...new Set([...Object.keys(budget), ...Object.keys(displayActual)])];
+        const maxVal = Math.max(...allCats.map(c => Math.max(budget[c] || 0, displayActual[c] || 0)));
 
         return (
           <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Spend by category</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Spend by category</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => setChartView('tripValue')} style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '20px', border: '1px solid #ccc', background: chartView === 'tripValue' ? '#1B2A4A' : 'transparent', color: chartView === 'tripValue' ? 'white' : '#666', cursor: 'pointer', fontWeight: chartView === 'tripValue' ? '600' : '400' }}>Full trip value (incl. points)</button>
+                  <button onClick={() => setChartView('cashOnly')} style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '20px', border: '1px solid #ccc', background: chartView === 'cashOnly' ? '#1B2A4A' : 'transparent', color: chartView === 'cashOnly' ? 'white' : '#666', cursor: 'pointer', fontWeight: chartView === 'cashOnly' ? '600' : '400' }}>My cash out of pocket</button>
+                </div>
+                <div style={{ fontSize: '11px', color: '#555', fontStyle: 'italic', textAlign: 'right' }}>
+                  {chartView === 'tripValue'
+                    ? '📊 Full expense value — including portions covered by points or credits'
+                    : '💵 Cash out of pocket only — points and credits excluded'}
+                </div>
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#888', marginBottom: '10px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#C9A84C', display: 'inline-block' }} />
@@ -374,15 +412,16 @@ function DashboardTab({ tripId, trip }) {
                 Actual spend
               </span>
             </div>
+
             <div style={{ background: '#f5f5f5', borderRadius: '12px', padding: '14px 16px' }}>
               {allCats.sort((a, b) => (budget[b] || 0) - (budget[a] || 0)).map(cat => {
                 const budgetAmt = budget[cat] || 0;
-                const actualAmt = actual[cat] || 0;
+                const actualAmt = displayActual[cat] || 0;
                 const budgetPct = maxVal > 0 ? Math.round(budgetAmt / maxVal * 100) : 0;
                 const actualPct = maxVal > 0 ? Math.round(actualAmt / maxVal * 100) : 0;
                 const over = actualAmt > budgetAmt && budgetAmt > 0;
                 const color = COLORS[cat] || '#888';
-                const totalActual = Object.values(actual).reduce((s,v) => s+v, 0);
+                const totalActual = Object.values(displayActual).reduce((s,v) => s+v, 0);
                 const totalBudget = Object.values(budget).reduce((s,v) => s+v, 0);
                 const actualSharePct = totalActual > 0 ? Math.round(actualAmt / totalActual * 100) : 0;
                 const budgetSharePct = totalBudget > 0 ? Math.round(budgetAmt / totalBudget * 100) : 0;
