@@ -19,6 +19,7 @@ function PointsTab({ tripId, expenses = [] }) {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showHelp, setShowHelp] = useState(true);
   const [editingAccount, setEditingAccount] = useState(null);
   const [inlineEditId, setInlineEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -167,6 +168,34 @@ function PointsTab({ tripId, expenses = [] }) {
 
   return (
     <div>
+      {/* Info box — collapsible */}
+      {showHelp ? (
+        <div style={{ background: '#E6F1FB', borderRadius: '10px', padding: '20px 24px', marginBottom: '1.5rem', borderLeft: '4px solid #185FA5' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ fontSize: '16px', fontWeight: '700', color: '#185FA5' }}>How to use this tab</div>
+            <button onClick={() => setShowHelp(false)} style={{ background: 'none', border: 'none', color: '#185FA5', cursor: 'pointer', fontSize: '13px', fontWeight: '500', padding: '2px 8px', borderRadius: '4px' }}>
+              Got it — collapse ✕
+            </button>
+          </div>
+          <div style={{ fontSize: '14px', color: '#333', lineHeight: 1.8 }}>
+            The Points tab works hand-in-hand with the <strong>Expenses tab</strong>. When you add a points payment to any expense, it automatically appears here as <strong>committed spend</strong>.<br/><br/>
+            Add a points account and enter your <strong>starting balance</strong> as a planning snapshot — this tab is not a live points tracker. If your points balance changes significantly, you can update the balance by clicking <strong>"Edit."</strong><br/><br/>
+            Look for the <strong>"Add a credit" button</strong> at the lower left of each account. Here you can add any significant additions already earned, or upcoming credits that will be added to your points account.
+            <ul style={{ marginTop: '8px', paddingLeft: '20px', fontSize: '14px' }}>
+              <li style={{ marginBottom: '6px' }}>Check <strong>Posted ✓</strong> if the points are already in your account</li>
+              <li style={{ marginBottom: '6px' }}>Leave unchecked if points are anticipated but not yet posted. A good example would be an introductory points offer you qualified for but has not yet posted to your account.</li>
+              <li>Do not include speculative earnings</li>
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <button onClick={() => setShowHelp(true)} style={{ background: 'none', border: 'none', color: '#4A5568', cursor: 'pointer', fontSize: '14px', padding: '0', fontWeight: '500' }}>
+            💡 Forgot how this tab works? <span style={{ textDecoration: 'underline' }}>Show guide</span>
+          </button>
+        </div>
+      )}
+
       {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', marginBottom: '1.5rem' }}>
         <div style={{ background: '#EEF1F8', border: '1px solid #d0d8e8', borderRadius: '10px', padding: '12px 14px' }}>
@@ -223,14 +252,6 @@ function PointsTab({ tripId, expenses = [] }) {
         </div>
       </div>
 
-      {/* Info box */}
-      <div style={{ background: '#E6F1FB', borderRadius: '10px', padding: '12px 16px', marginBottom: '1.5rem', borderLeft: '4px solid #185FA5' }}>
-        <div style={{ fontSize: '12px', fontWeight: '600', color: '#185FA5', marginBottom: '5px' }}>How to use this points tool</div>
-        <div style={{ fontSize: '12px', color: '#333', lineHeight: 1.6 }}>
-          The Points tab works hand-in-hand with the <strong>Expenses tab</strong>. When you add a points payment to any expense, it automatically appears here as <strong>committed spend</strong>.<br/><br/>Enter your <strong>starting balance</strong> as a planning snapshot — this is not a live tracker. Update it manually if your balance changes significantly.<br/><br/>Use the <strong>Credits</strong> section to record points you have earned or expect:<ul><li>Check <strong>Posted ✓</strong> if already in your account</li><li>Leave unchecked if anticipated but not yet posted</li><li>Do not include speculative earnings</li></ul>
-        </div>
-      </div>
-
       {/* Add account button */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
         <button onClick={() => openForm()}
@@ -271,11 +292,11 @@ function PointsTab({ tripId, expenses = [] }) {
 
           {/* Credits */}
           <div style={{ marginBottom: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '500' }}>Credits (earned or anticipated)</label>
+            <div style={{ marginBottom: '8px' }}>
+              <label style={{ fontSize: '13px', fontWeight: '600', color: '#1B2A4A', display: 'block', marginBottom: '6px' }}>Credits (earned or anticipated)</label>
               <button onClick={addAnticipated}
-                style={{ fontSize: '11px', padding: '3px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', cursor: 'pointer' }}>
-                + Add
+                style={{ fontSize: '13px', padding: '6px 14px', border: '1px solid #1B2A4A', borderRadius: '6px', background: 'transparent', color: '#1B2A4A', cursor: 'pointer', fontWeight: '500' }}>
+                + Add a credit
               </button>
             </div>
             {form.anticipatedAdditions.length === 0 && (
@@ -483,10 +504,10 @@ function PointsTab({ tripId, expenses = [] }) {
                     </div>
                   </div>
                   <div style={{ marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <label style={{ fontSize: '12px', fontWeight: '500' }}>Credits (earned or anticipated)</label>
+                    <div style={{ marginBottom: '8px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: '600', color: '#1B2A4A', display: 'block', marginBottom: '6px' }}>Credits (earned or anticipated)</label>
                       <button onClick={addAnticipated}
-                        style={{ fontSize: '11px', padding: '3px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', cursor: 'pointer' }}>+ Add</button>
+                        style={{ fontSize: '13px', padding: '6px 14px', border: '1px solid #1B2A4A', borderRadius: '6px', background: 'transparent', color: '#1B2A4A', cursor: 'pointer', fontWeight: '500' }}>+ Add a credit</button>
                     </div>
                     {form.anticipatedAdditions.map((item, idx) => (
                       <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr auto auto', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
