@@ -13,6 +13,11 @@ function TripsPage() {
   const navigate = useNavigate();
   const user = getUser();
 
+  const formatDate = (d) => {
+    if (!d) return '';
+    return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   useEffect(() => {
     fetchTrips();
   }, []);
@@ -190,7 +195,7 @@ function TripsPage() {
                 <div onClick={() => navigate(`/trips/${trip._id}`)} style={{ cursor: 'pointer', flex: 1 }}>
                   <h2 style={{ fontSize: '17px', fontWeight: '700', marginBottom: '4px', color: '#1B2A4A' }}>{trip.name}</h2>
                   <div style={{ fontSize: '13px', color: '#8A9AB5', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    {trip.startDate && <span>{trip.startDate} — {trip.endDate}</span>}
+                    {trip.startDate && <span>{formatDate(trip.startDate)} to {formatDate(trip.endDate)}</span>}
                     {trip.tripBudget > 0 && <span>Budget: ${trip.tripBudget.toLocaleString()}</span>}
                   </div>
                 </div>

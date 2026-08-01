@@ -34,6 +34,11 @@ function TripDetailPage() {
   const [showShare, setShowShare] = useState(false);
   const [shareEmail, setShareEmail] = useState('');
 
+  const formatDate = (d) => {
+    if (!d) return '';
+    return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   // Tab bar drag-to-scroll
   useEffect(() => {
     const init = () => {
@@ -197,7 +202,7 @@ function TripDetailPage() {
             <div style={{ flex: 1, textAlign: 'center', padding: '0 1.5rem' }}>
               <div style={{ fontSize: '22px', fontWeight: '700', color: 'white', lineHeight: 1.2, marginBottom: '4px' }}>{trip.name}</div>
               <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.65)', marginBottom: '6px' }}>
-                {trip.startDate} — {trip.endDate}
+                {formatDate(trip.startDate)} to {formatDate(trip.endDate)}
               </div>
               {trip.status && (
                 <span style={{ background: 'rgba(255,255,255,0.15)', padding: '2px 10px', borderRadius: '20px', fontSize: '10px', textTransform: 'capitalize', color: 'rgba(255,255,255,0.8)' }}>
