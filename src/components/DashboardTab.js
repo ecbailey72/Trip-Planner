@@ -185,39 +185,15 @@ function DashboardTab({ tripId, trip }) {
 
   return (
     <div>
-      {/* Phase banner */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        marginBottom: '1.5rem', padding: '12px 16px',
-        background: isComplete ? 'rgba(201,168,76,0.1)' : isActive ? 'rgba(26,122,92,0.08)' : 'rgba(27,42,74,0.06)',
-        borderRadius: '10px', border: isComplete ? '1px solid rgba(201,168,76,0.3)' : isActive ? '1px solid rgba(26,122,92,0.2)' : '1px solid rgba(27,42,74,0.1)'
-      }}>
-        <div>
-          <div style={{ fontSize: '16px', fontWeight: '700', color: isComplete ? '#C9A84C' : isActive ? '#1A7A5C' : '#1B2A4A', marginBottom: '2px' }}>
-            {isPlanning && 'PHASE: Plan — Building your trip 🗓'}
-            {isActive && 'PHASE: Go — Trip is underway ✈'}
-            {isComplete && 'PHASE: Remember — Trip complete 📸'}
-          </div>
-          <div style={{ fontSize: '12px', color: '#8A9AB5', marginTop: '2px' }}>
-            {isPlanning && 'Add expenses, build your itinerary, and set your budget before you depart.'}
-            {isActive && "You're on the trip! Track daily spend, check your itinerary, and capture memories."}
-            {isComplete && 'Review what you spent, how your points performed, and what to plan better next time.'}
-          </div>
-          {trip.startDate && (
-            <div style={{ fontSize: '12px', color: '#8A9AB5', marginTop: '4px' }}>
-              {formatDate(trip.startDate)} — {formatDate(trip.endDate)}
-              {cd && !isComplete && <span style={{ marginLeft: '10px', fontWeight: '600', color: cd.color }}>{cd.text}</span>}
-            </div>
-          )}
-        </div>
-        {isComplete && (
+      {isComplete && showPlanningView && (
+        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '1rem' }}>
           <button
             onClick={() => setShowPlanningView(v => !v)}
-            style={{ fontSize: '12px', padding: '5px 12px', background: 'transparent', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#C9A84C', cursor: 'pointer', whiteSpace: 'nowrap', marginLeft: '1rem' }}>
-            {showPlanningView ? 'Show remember view' : 'Show planning view'}
+            style={{ fontSize: '12px', padding: '5px 12px', background: 'transparent', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#C9A84C', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Show remember view
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Budget progress — top of dashboard */}
       {tripBudget > 0 && (!isComplete || showPlanningView) && (
@@ -310,6 +286,16 @@ function DashboardTab({ tripId, trip }) {
           </div>
         )}
       </div>}
+
+      {isComplete && !showPlanningView && (
+        <div style={{ marginBottom: '0.75rem' }}>
+          <button
+            onClick={() => setShowPlanningView(v => !v)}
+            style={{ fontSize: '12px', padding: '5px 12px', background: 'transparent', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '6px', color: '#C9A84C', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Show planning view
+          </button>
+        </div>
+      )}
 
       {/* Dual bar chart — budget vs actual by category */}
       {(expenses.length > 0 || spending.length > 0) && (() => {

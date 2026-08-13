@@ -39,6 +39,17 @@ function TripDetailPage() {
     return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const countdown = () => {
+    if (!trip.startDate || trip.status !== 'planning') return null;
+    const depart = new Date(trip.startDate + 'T12:00:00');
+    const diff = depart - new Date();
+    if (diff <= 0) return null;
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return { text: 'Departing today!' };
+    if (days === 1) return { text: 'Departing tomorrow' };
+    return { text: `${days} days to departure` };
+  };
+
   // Tab bar drag-to-scroll
   useEffect(() => {
     const init = () => {
@@ -205,10 +216,20 @@ function TripDetailPage() {
                 {formatDate(trip.startDate)} to {formatDate(trip.endDate)}
               </div>
               {trip.status && (
-                <span style={{ background: 'rgba(255,255,255,0.15)', padding: '2px 10px', borderRadius: '20px', fontSize: '10px', textTransform: 'capitalize', color: 'rgba(255,255,255,0.8)' }}>
-                  {trip.status}
+                <span style={{ background: 'rgba(255,255,255,0.15)', padding: '4px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.9)' }}>
+                  {trip.status === 'complete' ? 'Completed Trip' : trip.status === 'active' ? 'Trip in Progress' : 'Planning This Trip'}
                 </span>
               )}
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.65)', marginTop: '8px', maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
+                {trip.status === 'complete' ? (
+                  <>Review what you spent, how your points performed,<br />and what to plan better next time.</>
+                ) : trip.status === 'active' ? (
+                  "You're on the trip! Track daily spend, check your itinerary, and capture memories."
+                ) : (
+                  <>Add expenses, build your itinerary, and set your budget<br />before you depart.</>
+                )}
+                {countdown() && <span style={{ marginLeft: '8px', fontWeight: '600', color: '#FFD98A' }}>· {countdown().text}</span>}
+              </div>
             </div>
 
             {/* Right — share + edit */}
