@@ -166,14 +166,24 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points applied date</label>
-              <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>What would this have cost in cash?</label>
+              <input type="number" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value)}
+                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '18px' }}>
-              <input type="checkbox" id={`ref-${index}`} checked={payment.refundable} onChange={e => update('refundable', e.target.checked)} />
-              <label htmlFor={`ref-${index}`} style={{ fontSize: '13px', cursor: 'pointer' }}>Refundable if cancelled</label>
-            </div>
+            <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
+              <summary style={{ fontSize: '12px', color: '#555', cursor: 'pointer', padding: '6px 0' }}>More details — date, refundable</summary>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points applied date</label>
+                  <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '18px' }}>
+                  <input type="checkbox" id={`ref-${index}`} checked={payment.refundable} onChange={e => update('refundable', e.target.checked)} />
+                  <label htmlFor={`ref-${index}`} style={{ fontSize: '13px', cursor: 'pointer' }}>Refundable if cancelled</label>
+                </div>
+              </div>
+            </details>
           </>
         )}
 
@@ -194,15 +204,18 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Value redeemed ($)</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>What would this have cost in cash?</label>
               <input type="number" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value)}
                 placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date redeemed</label>
-              <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
+            <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
+              <summary style={{ fontSize: '12px', color: '#555', cursor: 'pointer', padding: '6px 0' }}>More details — date</summary>
+              <div style={{ marginTop: '6px' }}>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date redeemed</label>
+                <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
+                  style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+              </div>
+            </details>
           </>
         )}
 
@@ -227,18 +240,23 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
               <input type="number" value={payment.amount} onChange={e => update('amount', e.target.value)}
                 placeholder="Dollar value of credit applied" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card the credit applied to</label>
-              <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                {METHODS.map(m => <option key={m}>{m}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date applied</label>
-              <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
+            <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
+              <summary style={{ fontSize: '12px', color: '#555', cursor: 'pointer', padding: '6px 0' }}>More details — card, date</summary>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card the credit applied to</label>
+                  <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                    {METHODS.map(m => <option key={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date applied</label>
+                  <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
+                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+                </div>
+              </div>
+            </details>
           </>
         )}
 
