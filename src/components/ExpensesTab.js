@@ -81,35 +81,31 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
   const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
 
   return (
-    <div style={{ background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem', marginBottom: '10px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <span style={{ fontSize: '12px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment {index + 1}</span>
-        <button onClick={() => onRemove(index)} style={{ fontSize: '11px', padding: '2px 8px', border: '1px solid #ffcccc', borderRadius: '4px', background: 'transparent', color: '#cc4444', cursor: 'pointer' }}>Remove</button>
+    <div style={{ background: '#F3F1EB', border: '1px solid #E2E0D8', borderRadius: '12px', padding: '1.15rem 1.25rem', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+        <span style={{ fontSize: '12px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Payment {index + 1}</span>
+        <button onClick={() => onRemove(index)} style={{ fontSize: '11px', padding: '3px 10px', border: '1px solid #E8D6D0', borderRadius: '6px', background: 'transparent', color: '#B0563C', cursor: 'pointer' }}>Remove</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Payment type</label>
+          
           <select value={payment.type} onChange={e => update('type', e.target.value)}
-            style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+            style={{ width: '100%', padding: '4px 0', fontSize: '18px', fontWeight: '600', color: '#2C2C2A', border: 'none', borderBottom: '1px solid #E2E0D8', background: 'transparent', outline: 'none', cursor: 'pointer' }}>
             {PAYMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
           {payment.type && PAYMENT_TYPE_HINTS[payment.type] && (
-            <div style={{ fontSize: '11px', color: '#1A7A5C', marginTop: '5px', padding: '6px 8px', background: '#E1F5EE', borderRadius: '6px', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '13px', color: '#4A4944', marginTop: '10px', padding: '10px 12px', background: '#FCFCFA', borderRadius: '8px', lineHeight: '1.45', borderLeft: '2px solid #BA7517' }}>
               {PAYMENT_TYPE_HINTS[payment.type]}
             </div>
           )}
-          {(payment.type === 'awardBooking' || payment.type === 'awardBookingWithFees' || payment.type === 'portalBooking' || payment.type === 'statementCredit') && (
-            <div style={{ fontSize: '11px', color: '#BA7517', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              💡 This will appear in your <strong>Points tab</strong> as committed spend.
-            </div>
-          )}
+          
         </div>
 
-        <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Due date</label>
+        <div title="Due date" style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingTop: '10px' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8880" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, width: '22px' }}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
           <input type="date" value={payment.dueDate} onChange={e => update('dueDate', e.target.value)}
-            style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            style={{ flex: 1, minWidth: 0, border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '14px', color: '#2C2C2A', padding: '4px 0' }} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '18px' }}>
@@ -152,26 +148,35 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
         {/* POINTS BOOKING */}
         {payment.type === 'awardBooking' && (
           <>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program</label>
-              <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                <option value="">Select program</option>
-                {PROGRAMS.map(p => <option key={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points amount</label>
-              <input type="number" value={payment.pointsAmount} onChange={e => update('pointsAmount', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>What would this have cost in cash?</label>
-              <input type="number" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ width: '22px', textAlign: 'center', fontSize: '18px', color: '#8A8880' }}>★</span>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: '8px', borderBottom: '1px solid #E2E0D8', paddingBottom: '4px' }}>
+                  <input type="text" inputMode="numeric" value={payment.pointsAmount ? Number(String(payment.pointsAmount).replace(/[^0-9]/g, '')).toLocaleString() : ''} onChange={e => update('pointsAmount', e.target.value.replace(/[^0-9]/g, ''))} placeholder="0"
+                    style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#2C2C2A', padding: '2px 0' }} />
+                  <span style={{ fontSize: '14px', color: '#8A8880' }}>points</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ width: '22px', textAlign: 'center', fontSize: '20px', fontWeight: '500', color: '#BA7517', paddingTop: '5px' }}>&#36;</span>
+                <div style={{ flex: 1 }}>
+                  <input type="text" inputMode="decimal" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
+                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px' }}>
+                    What it would've cost in cash{Number(payment.pointsAmount) > 0 && Number(payment.pointsValue) > 0 && <span style={{ color: '#BA7517', fontWeight: '600' }}> · {(Number(payment.pointsValue) * 100 / Number(payment.pointsAmount)).toFixed(1)}¢ per point</span>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', paddingLeft: '34px' }}>
+                <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
+                  style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
+                  <option value="">Choose program ▾</option>
+                  {PROGRAMS.map(p => <option key={p} disabled={p.startsWith('──')}>{p}</option>)}
+                </select>
+              </div>
             </div>
             <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
-              <summary style={{ fontSize: '12px', color: '#555', cursor: 'pointer', padding: '6px 0' }}>More details — date, refundable</summary>
+              <summary style={{ fontSize: '14px', color: '#5F5E5A', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — date, refundable</summary>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points applied date</label>
@@ -209,7 +214,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
             <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
-              <summary style={{ fontSize: '12px', color: '#555', cursor: 'pointer', padding: '6px 0' }}>More details — date</summary>
+              <summary style={{ fontSize: '14px', color: '#5F5E5A', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — date</summary>
               <div style={{ marginTop: '6px' }}>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date redeemed</label>
                 <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
@@ -241,7 +246,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 placeholder="Dollar value of credit applied" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
             <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
-              <summary style={{ fontSize: '12px', color: '#555', cursor: 'pointer', padding: '6px 0' }}>More details — card, date</summary>
+              <summary style={{ fontSize: '14px', color: '#5F5E5A', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — card, date</summary>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card the credit applied to</label>
@@ -422,10 +427,10 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
           </>
         )}
 
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Notes</label>
-          <input value={payment.notes} onChange={e => update('notes', e.target.value)}
-            placeholder="e.g. Applied on May 1 bill pay" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8880" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, width: '22px' }}><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+          <input value={payment.notes} onChange={e => update('notes', e.target.value)} placeholder="Add a note"
+            style={{ flex: 1, minWidth: 0, border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '14px', color: '#2C2C2A', padding: '4px 0' }} />
         </div>
       </div>
     </div>
