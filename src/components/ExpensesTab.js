@@ -59,6 +59,16 @@ const PAYMENT_TYPE_HINTS = {
   creditVoucher: 'A dollar-value credit or voucher from a travel agency, booking site (Expedia, Viator, etc.), or other non-points source. Not for airline miles or hotel points — use Award Booking for those.',
 };
 
+const TYPE_ICON = {
+  awardBooking: 'M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z',
+  awardBookingWithFees: 'M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z',
+  cashCard: 'M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM2 10h20',
+  portalBooking: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20',
+  statementCredit: 'M4 2h16v20l-3-2-3 2-2-2-2 2-3-2-3 2zM8 7h8M8 11h8M8 15h5',
+  travelCredit: 'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01',
+  creditVoucher: 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z'
+};
+
 function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD', exchangeRate = 1, totalValue = 0 }) {
   const update = (field, value) => {
     const updated = { ...payment, [field]: value };
@@ -78,22 +88,24 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
     }
     onChange(index, updated);
   };
-  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
+  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 0 && exchangeRate !== 1;
 
   return (
     <div style={{ background: '#F3F1EB', border: '1px solid #E2E0D8', borderRadius: '12px', padding: '1.15rem 1.25rem', marginBottom: '12px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <span style={{ fontSize: '12px', fontWeight: '600', color: '#5F5E5A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Payment {index + 1}</span>
-        <button onClick={() => onRemove(index)} style={{ fontSize: '11px', padding: '3px 10px', border: '1px solid #E8D6D0', borderRadius: '6px', background: 'transparent', color: '#B0563C', cursor: 'pointer' }}>Remove</button>
-      </div>
+      
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
-          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#2C2C2A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D39A4A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={TYPE_ICON[payment.type] || TYPE_ICON.cashCard} /></svg>
+          </div>
           <select value={payment.type} onChange={e => update('type', e.target.value)}
-            style={{ width: '100%', padding: '4px 0', fontSize: '18px', fontWeight: '600', color: '#2C2C2A', border: 'none', borderBottom: '1px solid #E2E0D8', background: 'transparent', outline: 'none', cursor: 'pointer' }}>
+            style={{ flex: 1, minWidth: 0, padding: '4px 0', fontSize: '18px', fontWeight: '600', color: '#2C2C2A', border: 'none', borderBottom: '1px solid #E2E0D8', background: 'transparent', outline: 'none', cursor: 'pointer' }}>
             {PAYMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
+          <button onClick={() => onRemove(index)} style={{ fontSize: '13px', border: 'none', background: 'transparent', color: '#9A988F', cursor: 'pointer', padding: '4px 0' }}>Remove</button>
+          </div>
           {payment.type && PAYMENT_TYPE_HINTS[payment.type] && (
             <div style={{ fontSize: '13px', color: '#4A4944', marginTop: '10px', padding: '10px 12px', background: '#FCFCFA', borderRadius: '8px', lineHeight: '1.45', borderLeft: '2px solid #BA7517' }}>
               {PAYMENT_TYPE_HINTS[payment.type]}
@@ -115,34 +127,34 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
 
         {/* CASH */}
         {payment.type === 'cashCard' && (
-          <>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Amount ($)</label>
-              <input type="number" value={payment.amount} onChange={e => update('amount', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-              {isInternational && (
-                <div style={{ marginTop: '5px' }}>
-                  <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
-                  <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
-                    <input type="number" value={payment.localAmount || ''} onChange={e => {
-                      const local = parseFloat(e.target.value) || '';
-                      const usd = local ? parseFloat((local / exchangeRate).toFixed(2)) : '';
-                      onChange(index, { ...payment, localAmount: local, localCurrency, amount: usd ? usd.toFixed(2) : '' });
-                    }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
-                    {payment.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(payment.amount || 0).toFixed(2)}</span>}
+          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <span style={{ width: '22px', textAlign: 'center', fontSize: '20px', fontWeight: '500', color: '#BA7517', paddingTop: '5px' }}>&#36;</span>
+              <div style={{ flex: 1 }}>
+                <input type="text" inputMode="decimal" value={payment.amount || ''} onChange={e => update('amount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
+                  style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
+                {isInternational && (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '10px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#5F5E5A' }}>{localCurrency}</span>
+                    <input type="text" inputMode="decimal" value={payment.localAmount || ''} onChange={e => {
+                      const raw = e.target.value.replace(/[^0-9.]/g, '');
+                      const local = parseFloat(raw) || 0;
+                      const usd = local ? (local / exchangeRate).toFixed(2) : '';
+                      onChange(index, { ...payment, localAmount: raw, localCurrency, amount: usd });
+                    }} placeholder={'or enter in ' + localCurrency}
+                      style={{ flex: 1, minWidth: 0, border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '15px', color: '#2C2C2A', padding: '3px 0' }} />
+                    {payment.localAmount > 0 && <span style={{ fontSize: '13px', color: '#5F5E5A', whiteSpace: 'nowrap' }}>= &#36;{parseFloat(payment.amount || 0).toFixed(2)}</span>}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Payment method</label>
+            <div style={{ display: 'flex', gap: '8px', paddingLeft: '34px' }}>
               <select value={payment.method} onChange={e => update('method', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
+                style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
                 {METHODS.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>
-          </>
+          </div>
         )}
 
         {/* POINTS BOOKING */}
@@ -176,7 +188,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
               </div>
             </div>
             <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
-              <summary style={{ fontSize: '14px', color: '#5F5E5A', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — date, refundable</summary>
+              <summary style={{ fontSize: '14px', color: '#BA7517', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — date, refundable</summary>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points applied date</label>
@@ -214,7 +226,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
             <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
-              <summary style={{ fontSize: '14px', color: '#5F5E5A', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — date</summary>
+              <summary style={{ fontSize: '14px', color: '#BA7517', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — date</summary>
               <div style={{ marginTop: '6px' }}>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date redeemed</label>
                 <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
@@ -246,7 +258,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 placeholder="Dollar value of credit applied" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
             </div>
             <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
-              <summary style={{ fontSize: '14px', color: '#5F5E5A', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — card, date</summary>
+              <summary style={{ fontSize: '14px', color: '#BA7517', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — card, date</summary>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card the credit applied to</label>
@@ -438,7 +450,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
 }
 
 function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpenseChange }) {
-  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
+  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 0 && exchangeRate !== 1;
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -476,7 +488,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
         notes: expense.notes || '',
         localAmount: expense.localAmount || '',
         localCurrency: expense.localCurrency || '',
-        exchangeRate: expense.exchangeRate || exchangeRate
+        exchangeRate: exchangeRate
       });
       setPayments(expense.payments && expense.payments.length > 0 ? expense.payments : [{ ...emptyPayment }]);
     } else {

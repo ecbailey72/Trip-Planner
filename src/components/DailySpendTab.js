@@ -27,7 +27,7 @@ const emptyForm = (date = '') => ({
 
 function InlineForm({ date, onSave, onCancel, localCurrency = 'USD', exchangeRate = 1 }) {
   const [form, setForm] = useState(emptyForm(date));
-  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
+  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 0 && exchangeRate !== 1;
 
   const handleSave = () => {
     if (!form.amount || form.amount <= 0) return alert('Please enter an amount');
@@ -98,7 +98,7 @@ function InlineForm({ date, onSave, onCancel, localCurrency = 'USD', exchangeRat
 }
 
 function DailySpendTab({ tripId, dailyBudget = 200, localCurrency = 'USD', exchangeRate = 1 }) {
-  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 1;
+  const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 0 && exchangeRate !== 1;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState('all');
