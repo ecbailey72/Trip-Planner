@@ -371,7 +371,7 @@ function TripDetailPage() {
                   )}
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>Exchange rate ({tripForm.localCurrency || 'local'} per USD)</label>
+                  <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '3px' }}>How many {tripForm.localCurrency || 'local currency units'} equal 1 US dollar?</label>
                   <input type="number" step="0.01" value={tripForm.exchangeRate || ''} onChange={e => setTripForm({ ...tripForm, exchangeRate: parseFloat(e.target.value) || 1 })}
                     placeholder="e.g. 149.50" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: 'none' }} />
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginTop: '3px' }}>Update as rates change. Paid expenses lock in their USD value at time of entry.</div>

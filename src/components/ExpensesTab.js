@@ -150,7 +150,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
             </div>
             <div style={{ display: 'flex', gap: '8px', paddingLeft: '34px' }}>
               <select value={payment.method} onChange={e => update('method', e.target.value)}
-                style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
+                style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', outline: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
                 {METHODS.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>
@@ -181,7 +181,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
               </div>
               <div style={{ display: 'flex', gap: '8px', paddingLeft: '34px' }}>
                 <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
-                  style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
+                  style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', outline: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
                   <option value="">Choose program ▾</option>
                   {PROGRAMS.map(p => <option key={p} disabled={p.startsWith('──')}>{p}</option>)}
                 </select>
@@ -705,7 +705,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payments</h4>
                 <button onClick={() => setPayments([...payments, { ...emptyPayment }])}
-                  style={{ fontSize: '12px', padding: '4px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', cursor: 'pointer' }}>
+                  style={{ fontSize: '12px', padding: '4px 10px', border: '1px solid #BA7517', borderRadius: '6px', background: 'transparent', color: '#BA7517', fontWeight: '600', cursor: 'pointer' }}>
                   + Add payment
                 </button>
               </div>
@@ -860,7 +860,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                           <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payments</h4>
                           <button onClick={() => setPayments([...payments, { ...emptyPayment }])}
-                            style={{ fontSize: '12px', padding: '4px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', cursor: 'pointer' }}>
+                            style={{ fontSize: '12px', padding: '4px 10px', border: '1px solid #BA7517', borderRadius: '6px', background: 'transparent', color: '#BA7517', fontWeight: '600', cursor: 'pointer' }}>
                             + Add payment
                           </button>
                         </div>
@@ -978,7 +978,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                           <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payments</h4>
                           <button onClick={() => setPayments([...payments, { ...emptyPayment }])}
-                            style={{ fontSize: '12px', padding: '4px 10px', border: '1px solid #ccc', borderRadius: '6px', background: 'transparent', cursor: 'pointer' }}>
+                            style={{ fontSize: '12px', padding: '4px 10px', border: '1px solid #BA7517', borderRadius: '6px', background: 'transparent', color: '#BA7517', fontWeight: '600', cursor: 'pointer' }}>
                             + Add payment
                           </button>
                         </div>
