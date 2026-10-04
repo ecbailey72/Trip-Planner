@@ -53,8 +53,8 @@ const PAYMENT_TYPE_HINTS = {
   cashCard: 'Paid directly with a credit or debit card. No points involved.',
   awardBooking: 'Booked directly with an airline or hotel using miles or points — e.g. ANA award flight, Hilton free night certificate.',
   awardBookingWithFees: 'Points cover a portion of the booking value. The remainder — including any taxes, fees, or uncovered balance — is charged to your card.',
-  portalBooking: 'Booked through a credit card travel portal using points only — e.g. Capital One Travel, Chase Travel. For annual travel credits, use Travel Credit instead.',
-  statementCredit: 'Points applied as a statement credit against a card charge after the fact.',
+  portalBooking: 'Booked through a travel portal (Capital One Travel; Chase Travel; American Express Travel; etc.) using points only. For annual travel credits, use Travel Credit instead.',
+  statementCredit: 'You make a purchase on your credit card. Later, you use points to clear that charge off your statement.',
   travelCredit: 'An annual travel credit from your credit card — e.g. Capital One Venture X $300, Amex Platinum $200. No points involved — this is a dollar credit from your card benefit.',
   creditVoucher: 'A dollar-value credit or voucher from a travel agency, booking site (Expedia, Viator, etc.), or other non-points source. Not for airline miles or hotel points — use Award Booking for those.',
 };
@@ -108,7 +108,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
           </div>
           {payment.type && PAYMENT_TYPE_HINTS[payment.type] && (
             <div style={{ fontSize: '13px', color: '#4A4944', marginTop: '10px', padding: '10px 12px', background: '#FCFCFA', borderRadius: '8px', lineHeight: '1.45', borderLeft: '2px solid #BA7517' }}>
-              {PAYMENT_TYPE_HINTS[payment.type]}
+              {PAYMENT_TYPE_HINTS[payment.type].includes('using points only') ? (<>{PAYMENT_TYPE_HINTS[payment.type].split('using points only')[0]}<strong>using points only</strong>.<br/>{PAYMENT_TYPE_HINTS[payment.type].split('using points only')[1].replace(/^\. /, '')}</>) : PAYMENT_TYPE_HINTS[payment.type]}
             </div>
           )}
           
@@ -164,9 +164,8 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ width: '22px', textAlign: 'center', fontSize: '18px', color: '#8A8880' }}>★</span>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: '8px', borderBottom: '1px solid #E2E0D8', paddingBottom: '4px' }}>
-                  <input type="text" inputMode="numeric" value={payment.pointsAmount ? Number(String(payment.pointsAmount).replace(/[^0-9]/g, '')).toLocaleString() : ''} onChange={e => update('pointsAmount', e.target.value.replace(/[^0-9]/g, ''))} placeholder="0"
+                  <input type="text" inputMode="numeric" value={payment.pointsAmount ? Number(String(payment.pointsAmount).replace(/[^0-9]/g, '')).toLocaleString() : ''} onChange={e => update('pointsAmount', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Points used"
                     style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#2C2C2A', padding: '2px 0' }} />
-                  <span style={{ fontSize: '14px', color: '#8A8880' }}>points</span>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -207,73 +206,64 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
         {/* PORTAL BOOKING */}
         {payment.type === 'portalBooking' && (
           <>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program / portal</label>
-              <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                <option value="">Select program</option>
-                {PROGRAMS.map(p => <option key={p} disabled={p.startsWith('──')}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points / credits used</label>
-              <input type="number" value={payment.pointsAmount} onChange={e => update('pointsAmount', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>What would this have cost in cash?</label>
-              <input type="number" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
-              <summary style={{ fontSize: '14px', color: '#BA7517', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — date</summary>
-              <div style={{ marginTop: '6px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date redeemed</label>
-                <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
-                  style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ width: '22px', textAlign: 'center', fontSize: '18px', color: '#8A8880' }}>★</span>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: '8px', borderBottom: '1px solid #E2E0D8', paddingBottom: '4px' }}>
+                  <input type="text" inputMode="numeric" value={payment.pointsAmount ? Number(String(payment.pointsAmount).replace(/[^0-9]/g, '')).toLocaleString() : ''} onChange={e => update('pointsAmount', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Points used"
+                    style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#2C2C2A', padding: '2px 0' }} />
+                </div>
               </div>
-            </details>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ width: '22px', textAlign: 'center', fontSize: '20px', fontWeight: '500', color: '#BA7517', paddingTop: '5px' }}>&#36;</span>
+                <div style={{ flex: 1 }}>
+                  <input type="text" inputMode="decimal" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
+                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px' }}>
+                    What it would've cost in cash{Number(payment.pointsAmount) > 0 && Number(payment.pointsValue) > 0 && <span style={{ color: '#BA7517', fontWeight: '600' }}> · {(Number(payment.pointsValue) * 100 / Number(payment.pointsAmount)).toFixed(1)}¢ per point</span>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', paddingLeft: '34px' }}>
+                <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
+                  style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', outline: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
+                  <option value="">Choose program / portal ▾</option>
+                  {PROGRAMS.map(p => <option key={p} disabled={p.startsWith('──')}>{p}</option>)}
+                </select>
+              </div>
+            </div>
           </>
         )}
 
         {/* STATEMENT CREDIT */}
         {payment.type === 'statementCredit' && (
           <>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points program</label>
-              <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                <option value="">Select program</option>
-                {PROGRAMS.map(p => <option key={p} disabled={p.startsWith('──')}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Points used</label>
-              <input type="number" value={payment.pointsAmount} onChange={e => update('pointsAmount', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Credit value ($)</label>
-              <input type="number" value={payment.amount} onChange={e => update('amount', e.target.value)}
-                placeholder="Dollar value of credit applied" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
-              <summary style={{ fontSize: '14px', color: '#BA7517', fontWeight: '500', cursor: 'pointer', padding: '6px 0' }}>More details — card, date</summary>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card the credit applied to</label>
-                  <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
-                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                    {METHODS.map(m => <option key={m}>{m}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date applied</label>
-                  <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
-                    style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ width: '22px', textAlign: 'center', fontSize: '18px', color: '#8A8880' }}>★</span>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: '8px', borderBottom: '1px solid #E2E0D8', paddingBottom: '4px' }}>
+                  <input type="text" inputMode="numeric" value={payment.pointsAmount ? Number(String(payment.pointsAmount).replace(/[^0-9]/g, '')).toLocaleString() : ''} onChange={e => update('pointsAmount', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Points used"
+                    style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#2C2C2A', padding: '2px 0' }} />
                 </div>
               </div>
-            </details>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ width: '22px', textAlign: 'center', fontSize: '20px', fontWeight: '500', color: '#BA7517', paddingTop: '5px' }}>&#36;</span>
+                <div style={{ flex: 1 }}>
+                  <input type="text" inputMode="decimal" value={payment.amount || ''} onChange={e => update('amount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
+                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px' }}>
+                    Value credited back to your card{Number(payment.pointsAmount) > 0 && Number(payment.amount) > 0 && <span style={{ color: '#BA7517', fontWeight: '600' }}> · {(Number(payment.amount) * 100 / Number(payment.pointsAmount)).toFixed(1)}¢ per point</span>}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', paddingLeft: '34px' }}>
+                <select value={payment.pointsProgram} onChange={e => update('pointsProgram', e.target.value)}
+                  style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', outline: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
+                  <option value="">Choose program ▾</option>
+                  {PROGRAMS.slice(PROGRAMS.indexOf('── Credit Cards ──') + 1, PROGRAMS.findIndex((p, i) => i > 0 && p.startsWith('──'))).map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
           </>
         )}
 
