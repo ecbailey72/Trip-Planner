@@ -55,8 +55,8 @@ const PAYMENT_TYPE_HINTS = {
   awardBookingWithFees: 'Points cover a portion of the booking value. The remainder — including any taxes, fees, or uncovered balance — is charged to your card.',
   portalBooking: 'Booked through a travel portal (Capital One Travel; Chase Travel; American Express Travel; etc.) using points only. For annual travel credits, use Travel Credit instead.',
   statementCredit: 'You make a purchase on your credit card. Later, you use points to clear that charge off your statement.',
-  travelCredit: 'An annual travel credit from your credit card — e.g. Capital One Venture X $300, Amex Platinum $200. No points involved — this is a dollar credit from your card benefit.',
-  creditVoucher: 'A dollar-value credit or voucher from a travel agency, booking site (Expedia, Viator, etc.), or other non-points source. Not for airline miles or hotel points — use Award Booking for those.',
+  travelCredit: 'A statement credit your card gives you each year toward travel — often applied automatically or through the card\'s travel portal. No points involved; it\'s a dollar benefit built into the card.',
+  creditVoucher: 'A dollar-value credit or voucher from a travel agency, booking site, or other non-points source. Not for airline miles or hotel points — use Award Booking for those.',
 };
 
 const TYPE_ICON = {
@@ -374,22 +374,22 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
         {/* TRAVEL CREDIT */}
         {payment.type === 'travelCredit' && (
           <>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Card benefit from</label>
-              <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                {METHODS.map(m => <option key={m}>{m}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Credit amount used ($)</label>
-              <input type="number" value={payment.creditAmount} onChange={e => update('creditAmount', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Date applied</label>
-              <input type="date" value={payment.pointsAppliedDate} onChange={e => update('pointsAppliedDate', e.target.value)}
-                style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ width: '22px', textAlign: 'center', fontSize: '20px', fontWeight: '500', color: '#BA7517', paddingTop: '5px' }}>&#36;</span>
+                <div style={{ flex: 1 }}>
+                  <input type="text" inputMode="decimal" value={payment.creditAmount || ''} onChange={e => update('creditAmount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="Credit amount"
+                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px' }}>An annual travel credit from your card benefit.</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', paddingLeft: '34px' }}>
+                <select value={payment.cardUsed} onChange={e => update('cardUsed', e.target.value)}
+                  style={{ appearance: 'none', WebkitAppearance: 'none', border: 'none', outline: 'none', borderRadius: '999px', background: '#E7E4DB', color: '#5F5E5A', fontSize: '12px', fontWeight: '500', padding: '6px 14px', cursor: 'pointer' }}>
+                  <option value="">Choose card ▾</option>
+                  {PROGRAMS.slice(PROGRAMS.indexOf('── Credit Cards ──') + 1, PROGRAMS.findIndex((p, i) => i > 0 && p.startsWith('──'))).map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
             </div>
           </>
         )}
@@ -397,37 +397,39 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
         {/* CREDIT */}
         {payment.type === 'creditVoucher' && (
           <>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Credit source</label>
-              <input value={payment.creditSource} onChange={e => update('creditSource', e.target.value)}
-                placeholder="e.g. Viator, Gift card" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Credit amount ($)</label>
-              <input type="number" value={payment.creditAmount} onChange={e => update('creditAmount', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
-              {isInternational && (
-                <div style={{ marginTop: '5px' }}>
-                  <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
-                  <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
-                    <input type="number" value={payment.localAmount || ''} onChange={e => {
-                      const local = parseFloat(e.target.value) || '';
-                      const usd = local ? parseFloat((local / exchangeRate).toFixed(2)) : '';
-                      onChange(index, { ...payment, localAmount: local, localCurrency, creditAmount: usd ? usd.toFixed(2) : '' });
-                    }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
-                    {payment.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(payment.creditAmount || 0).toFixed(2)}</span>}
-                  </div>
+            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <span style={{ width: '22px', textAlign: 'center', fontSize: '20px', fontWeight: '500', color: '#BA7517', paddingTop: '5px' }}>&#36;</span>
+                <div style={{ flex: 1 }}>
+                  <input type="text" inputMode="decimal" value={payment.creditAmount || ''} onChange={e => update('creditAmount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="Voucher value"
+                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px', fontStyle: 'italic' }}>A credit or voucher from a booking site or travel agency.</div>
+                  {isInternational && (
+                    <div style={{ marginTop: '18px' }}>
+                      <div style={{ fontSize: '12px', color: '#5F5E5A', marginBottom: '4px' }}>Or enter in local currency ({localCurrency})</div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input type="text" inputMode="decimal" value={payment.localAmount || ''} onChange={e => {
+                          const local = parseFloat(e.target.value) || '';
+                          const usd = local ? parseFloat((local / exchangeRate).toFixed(2)) : '';
+                          onChange(index, { ...payment, localAmount: local, localCurrency, creditAmount: usd ? usd.toFixed(2) : '' });
+                        }} placeholder="Amount in local currency"
+                          style={{ flex: 1, minWidth: 0, border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '14px', color: '#2C2C2A', padding: '4px 0' }} />
+                        {payment.localAmount > 0 && <span style={{ fontSize: '12px', color: '#BA7517', fontWeight: '600', whiteSpace: 'nowrap' }}>= &#36;{parseFloat(payment.creditAmount || 0).toFixed(2)}</span>}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '3px' }}>Remaining cash ($)</label>
-              <input type="number" value={payment.remainingCash} onChange={e => update('remainingCash', e.target.value)}
-                placeholder="0" style={{ width: '100%', padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ccc' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8880" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, width: '22px' }}><path d="M3 7h18v10H3zM3 11h18"/></svg>
+                <input className="voucher-source" value={payment.creditSource} onChange={e => update('creditSource', e.target.value)} placeholder="Where from? (booking site, agency, gift card)"
+                  style={{ flex: 1, minWidth: 0, border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '14px', color: '#2C2C2A', padding: '4px 0' }} />
+              </div>
             </div>
           </>
         )}
+
+        
 
         <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8880" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, width: '22px' }}><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
