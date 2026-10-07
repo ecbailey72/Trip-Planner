@@ -134,16 +134,18 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 <input type="text" inputMode="decimal" value={payment.amount || ''} onChange={e => update('amount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
                   style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
                 {isInternational && (
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '10px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#5F5E5A' }}>{localCurrency}</span>
-                    <input type="text" inputMode="decimal" value={payment.localAmount || ''} onChange={e => {
-                      const raw = e.target.value.replace(/[^0-9.]/g, '');
-                      const local = parseFloat(raw) || 0;
-                      const usd = local ? (local / exchangeRate).toFixed(2) : '';
-                      onChange(index, { ...payment, localAmount: raw, localCurrency, amount: usd });
-                    }} placeholder={'or enter in ' + localCurrency}
-                      style={{ flex: 1, minWidth: 0, border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '15px', color: '#2C2C2A', padding: '3px 0' }} />
-                    {payment.localAmount > 0 && <span style={{ fontSize: '13px', color: '#5F5E5A', whiteSpace: 'nowrap' }}>= &#36;{parseFloat(payment.amount || 0).toFixed(2)}</span>}
+                  <div style={{ marginTop: '18px' }}>
+                    <div style={{ fontSize: '12px', color: '#5F5E5A', marginBottom: '4px' }}>Or enter in local currency ({localCurrency})</div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input type="text" inputMode="decimal" value={payment.localAmount || ''} onChange={e => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, '');
+                        const local = parseFloat(raw) || 0;
+                        const usd = local ? (local / exchangeRate).toFixed(2) : '';
+                        onChange(index, { ...payment, localAmount: raw, localCurrency, amount: usd });
+                      }} placeholder="Amount in local currency"
+                        style={{ flex: 1, minWidth: 0, border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '14px', color: '#2C2C2A', padding: '4px 0' }} />
+                      {payment.localAmount > 0 && <span style={{ fontSize: '12px', color: '#BA7517', fontWeight: '600', whiteSpace: 'nowrap' }}>= &#36;{parseFloat(payment.amount || 0).toFixed(2)}</span>}
+                    </div>
                   </div>
                 )}
               </div>
@@ -173,7 +175,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 <div style={{ flex: 1 }}>
                   <input type="text" inputMode="decimal" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
                     style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
-                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px' }}>
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px', fontStyle: 'italic' }}>
                     What it would've cost in cash{Number(payment.pointsAmount) > 0 && Number(payment.pointsValue) > 0 && <span style={{ color: '#BA7517', fontWeight: '600' }}> · {(Number(payment.pointsValue) * 100 / Number(payment.pointsAmount)).toFixed(1)}¢ per point</span>}
                   </div>
                 </div>
@@ -219,7 +221,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 <div style={{ flex: 1 }}>
                   <input type="text" inputMode="decimal" value={payment.pointsValue || ''} onChange={e => update('pointsValue', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
                     style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
-                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px' }}>
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px', fontStyle: 'italic' }}>
                     What it would've cost in cash{Number(payment.pointsAmount) > 0 && Number(payment.pointsValue) > 0 && <span style={{ color: '#BA7517', fontWeight: '600' }}> · {(Number(payment.pointsValue) * 100 / Number(payment.pointsAmount)).toFixed(1)}¢ per point</span>}
                   </div>
                 </div>
@@ -251,7 +253,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 <div style={{ flex: 1 }}>
                   <input type="text" inputMode="decimal" value={payment.amount || ''} onChange={e => update('amount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
                     style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
-                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px' }}>
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px', fontStyle: 'italic' }}>
                     Value credited back to your card{Number(payment.pointsAmount) > 0 && Number(payment.amount) > 0 && <span style={{ color: '#BA7517', fontWeight: '600' }}> · {(Number(payment.amount) * 100 / Number(payment.pointsAmount)).toFixed(1)}¢ per point</span>}
                   </div>
                 </div>
@@ -380,7 +382,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
                 <div style={{ flex: 1 }}>
                   <input type="text" inputMode="decimal" value={payment.creditAmount || ''} onChange={e => update('creditAmount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="Credit amount"
                     style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
-                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px' }}>An annual travel credit from your card benefit.</div>
+                  <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px', fontStyle: 'italic' }}>An annual travel credit from your card benefit.</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', paddingLeft: '34px' }}>
