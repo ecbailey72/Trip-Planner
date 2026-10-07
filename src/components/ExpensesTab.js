@@ -443,6 +443,100 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
   );
 }
 
+function ExpenseDetails({ form, setForm, isInternational, localCurrency, exchangeRate }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+      <div style={{ gridColumn: '1 / -1' }}>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense name *</label>
+        <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+          placeholder="e.g. Delta flights ATL-TYO"
+          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+      </div>
+      <div>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Category</label>
+        <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Type</label>
+        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value, eventStatus: e.target.value === 'confirmed' ? (form.eventStatus === 'placeholder' ? 'prepaid' : form.eventStatus) : form.eventStatus })}
+          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+          <option value="confirmed">Confirmed expense</option>
+          <option value="planned">Planned estimate</option>
+        </select>
+      </div>
+      {form.type === 'confirmed' && (
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Booking status</label>
+          <select value={form.eventStatus} onChange={e => setForm({ ...form, eventStatus: e.target.value })}
+            style={{ width: '50%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
+            {EVENT_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </div>
+      )}
+      <div>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount' : 'Final / actual value'} (&#36;)</label>
+        <input type="number" value={form.localAmount && form.totalValue ? parseFloat(form.totalValue).toFixed(2) : form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
+          placeholder="0" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        {isInternational && (
+          <div style={{ marginTop: '6px' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: '#8A9AB5', marginBottom: '3px' }}>Or enter in {localCurrency}</label>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <span style={{ fontSize: '13px', color: '#8A9AB5' }}>{localCurrency}</span>
+              <input type="number" value={form.localAmount} onChange={e => {
+                const local = parseFloat(e.target.value) || '';
+                const usd = local ? Math.round(local / exchangeRate * 100) / 100 : '';
+                setForm({ ...form, localAmount: local, localCurrency, totalValue: usd });
+              }} placeholder="0" style={{ flex: 1, padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
+              {form.localAmount > 0 && <span style={{ fontSize: '12px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= &#36;{parseFloat(form.totalValue).toFixed(2)}</span>}
+            </div>
+          </div>
+        )}
+      </div>
+      {form.type === 'confirmed' && (
+      <div>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote / estimate (&#36;) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
+        <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
+          placeholder="What you expected to pay" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>e.g. quoted price before unexpected fees</div>
+      </div>
+      )}
+      <div>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Activity date</label>
+        <input type="date" value={form.activityDate} onChange={e => setForm({ ...form, activityDate: e.target.value })}
+          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+      </div>
+      {form.type === 'confirmed' && (
+        <>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Date booked</label>
+            <input type="date" value={form.bookedDate} onChange={e => setForm({ ...form, bookedDate: e.target.value })}
+              style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Vendor</label>
+            <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })}
+              placeholder="e.g. delta.com" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Confirmation #</label>
+            <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
+              placeholder="Confirmation number" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+          </div>
+        </>
+      )}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Notes</label>
+        <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
+          placeholder="Any additional notes" rows={2}
+          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
+      </div>
+    </div>
+  );
+}
+
 function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpenseChange }) {
   const isInternational = localCurrency && localCurrency !== 'USD' && exchangeRate > 0 && exchangeRate !== 1;
   const [expenses, setExpenses] = useState([]);
@@ -604,95 +698,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
         <div style={{ background: '#f5f5f5', padding: '1.5rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
           <h3 style={{ marginBottom: '1rem', fontSize: '16px', fontWeight: '600' }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense name *</label>
-              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. Delta flights ATL-TYO"
-                style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Category</label>
-              <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Type</label>
-              <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value, eventStatus: e.target.value === 'confirmed' ? (form.eventStatus === 'placeholder' ? 'prepaid' : form.eventStatus) : form.eventStatus })}
-                style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                <option value="confirmed">Confirmed expense</option>
-                <option value="planned">Planned estimate</option>
-              </select>
-            </div>
-            {form.type === 'confirmed' && (
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Booking status</label>
-                <select value={form.eventStatus} onChange={e => setForm({ ...form, eventStatus: e.target.value })}
-                  style={{ width: '50%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                  {EVENT_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
-              </div>
-            )}
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount ($)' : 'Final / actual value ($)'}</label>
-              <input type="number" value={form.localAmount && form.totalValue ? parseFloat(form.totalValue).toFixed(2) : form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
-                placeholder="0" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-              {isInternational && (
-                <div style={{ marginTop: '6px' }}>
-                  <label style={{ display: 'block', fontSize: '11px', color: '#8A9AB5', marginBottom: '3px' }}>Or enter in {localCurrency}</label>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', color: '#8A9AB5' }}>{localCurrency}</span>
-                    <input type="number" value={form.localAmount} onChange={e => {
-                      const local = parseFloat(e.target.value) || '';
-                      const usd = local ? Math.round(local / exchangeRate * 100) / 100 : '';
-                      setForm({ ...form, localAmount: local, localCurrency, totalValue: usd });
-                    }} placeholder="0" style={{ flex: 1, padding: '7px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
-                    {form.localAmount > 0 && <span style={{ fontSize: '12px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(form.totalValue).toFixed(2)}</span>}
-                  </div>
-                </div>
-              )}
-            </div>
-            {form.type === 'confirmed' && (
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote / estimate ($) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
-              <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
-                placeholder="What you expected to pay" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-              <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>e.g. quoted price before unexpected fees</div>
-            </div>
-            )}
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Activity date</label>
-              <input type="date" value={form.activityDate} onChange={e => setForm({ ...form, activityDate: e.target.value })}
-                style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-            </div>
-            {form.type === 'confirmed' && (
-              <>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Date booked</label>
-                  <input type="date" value={form.bookedDate} onChange={e => setForm({ ...form, bookedDate: e.target.value })}
-                    style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Vendor</label>
-                  <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })}
-                    placeholder="e.g. delta.com" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Confirmation #</label>
-                  <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
-                    placeholder="Confirmation number" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                </div>
-              </>
-            )}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Notes</label>
-              <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-                placeholder="Any additional notes" rows={2}
-                style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
-            </div>
-          </div>
+          <ExpenseDetails form={form} setForm={setForm} isInternational={isInternational} localCurrency={localCurrency} exchangeRate={exchangeRate} />
 
           {form.type === 'confirmed' && (
             <div style={{ marginBottom: '16px' }}>
@@ -773,82 +779,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                   {/* Inline edit form */}
                   {inlineEditId === expense._id && showForm && (
                     <div style={{ marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense name *</label>
-                          <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Category</label>
-                          <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Final / actual value ($)</label>
-                          <input type="number" value={form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                          {isInternational && (
-                            <div style={{ marginTop: '5px' }}>
-                              <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
-                              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                                <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
-                                <input type="number" value={form.localAmount || ''} onChange={e => {
-                                  const local = parseFloat(e.target.value) || '';
-                                  const usd = local ? (local / exchangeRate).toFixed(2) : '';
-                                  setForm({ ...form, localAmount: local, localCurrency, totalValue: usd });
-                                }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
-                                {form.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(form.totalValue || 0).toFixed(2)}</span>}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote ($) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
-                          <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Activity date</label>
-                          <input type="date" value={form.activityDate} onChange={e => setForm({ ...form, activityDate: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Vendor</label>
-                          <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Confirmation #</label>
-                          <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Notes</label>
-                          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-                            rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
-                        </div>
-                      </div>
-                      {/* Expense type */}
-                      <div style={{ marginBottom: '12px' }}>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense type</label>
-                        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value, eventStatus: e.target.value === 'confirmed' ? (form.eventStatus === 'placeholder' ? 'prepaid' : form.eventStatus) : form.eventStatus })}
-                          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                          <option value="planned">Planned estimate</option>
-                          <option value="confirmed">Confirmed</option>
-                        </select>
-                      </div>
-                                            {form.type === 'confirmed' && (
-                        <div style={{ marginBottom: '12px' }}>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Booking status</label>
-                          <select value={form.eventStatus} onChange={e => setForm({ ...form, eventStatus: e.target.value })}
-                            style={{ width: '50%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                            {EVENT_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                          </select>
-                        </div>
-                      )}
+                      <ExpenseDetails form={form} setForm={setForm} isInternational={isInternational} localCurrency={localCurrency} exchangeRate={exchangeRate} />
                       {/* Payments section in inline edit */}
                       <div style={{ marginBottom: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -902,72 +833,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                   </div>
                   {inlineEditId === expense._id && showForm && (
                     <div style={{ marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense name *</label>
-                          <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Category</label>
-                          <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount ($)' : 'Final / actual value ($)'}</label>
-                          <input type="number" value={form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                          {isInternational && (
-                            <div style={{ marginTop: '5px' }}>
-                              <label style={{ display: 'block', fontSize: '10px', color: '#8A9AB5', marginBottom: '2px' }}>Or enter in {localCurrency}</label>
-                              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                                <span style={{ fontSize: '12px', color: '#8A9AB5' }}>{localCurrency}</span>
-                                <input type="number" value={form.localAmount || ''} onChange={e => {
-                                  const local = parseFloat(e.target.value) || '';
-                                  const usd = local ? (local / exchangeRate).toFixed(2) : '';
-                                  setForm({ ...form, localAmount: local, localCurrency, totalValue: usd });
-                                }} placeholder="0" style={{ flex: 1, padding: '6px 8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #E8E6E1' }} />
-                                {form.localAmount > 0 && <span style={{ fontSize: '11px', color: '#1A7A5C', whiteSpace: 'nowrap' }}>= ${parseFloat(form.totalValue || 0).toFixed(2)}</span>}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote ($) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
-                          <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Activity date</label>
-                          <input type="date" value={form.activityDate} onChange={e => setForm({ ...form, activityDate: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Vendor</label>
-                          <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Confirmation #</label>
-                          <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-                        </div>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Notes</label>
-                          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
-                            rows={2} style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
-                        </div>
-                      </div>
-                      <div style={{ marginBottom: '12px' }}>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense type</label>
-                        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value, eventStatus: e.target.value === 'confirmed' ? (form.eventStatus === 'placeholder' ? 'prepaid' : form.eventStatus) : form.eventStatus })}
-                          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-                          <option value="planned">Planned estimate</option>
-                          <option value="confirmed">Confirmed</option>
-                        </select>
-                      </div>
+                      <ExpenseDetails form={form} setForm={setForm} isInternational={isInternational} localCurrency={localCurrency} exchangeRate={exchangeRate} />
                       <div style={{ marginBottom: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                           <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payments</h4>
