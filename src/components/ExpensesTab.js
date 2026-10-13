@@ -459,23 +459,13 @@ function ExpenseDetails({ form, setForm, isInternational, localCurrency, exchang
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </select>
       </div>
-      <div>
-        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Type</label>
-        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value, eventStatus: e.target.value === 'confirmed' ? (form.eventStatus === 'placeholder' ? 'prepaid' : form.eventStatus) : form.eventStatus })}
-          style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-          <option value="confirmed">Confirmed expense</option>
-          <option value="planned">Planned estimate</option>
-        </select>
-      </div>
-      {form.type === 'confirmed' && (
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Booking status</label>
-          <select value={form.eventStatus} onChange={e => setForm({ ...form, eventStatus: e.target.value })}
-            style={{ width: '50%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }}>
-            {EVENT_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
+      <div style={{ gridColumn: '1 / -1' }}>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px' }}>Expense type</label>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button type="button" onClick={() => setForm({ ...form, type: 'confirmed' })} style={{ flex: 1, padding: '8px 10px', fontSize: '14px', borderRadius: '20px', border: 'none', outline: 'none', cursor: 'pointer', background: form.type === 'confirmed' ? '#2C2C2A' : '#E7E4DB', color: form.type === 'confirmed' ? '#FCFCFA' : '#5F5E5A' }}>Confirmed expense</button>
+          <button type="button" onClick={() => setForm({ ...form, type: 'planned' })} style={{ flex: 1, padding: '8px 10px', fontSize: '14px', borderRadius: '20px', border: 'none', outline: 'none', cursor: 'pointer', background: form.type === 'planned' ? '#2C2C2A' : '#E7E4DB', color: form.type === 'planned' ? '#FCFCFA' : '#5F5E5A' }}>Planned estimate</button>
         </div>
-      )}
+      </div>
       <div>
         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount' : 'Final / actual value'} (&#36;)</label>
         <input type="number" value={form.localAmount && form.totalValue ? parseFloat(form.totalValue).toFixed(2) : form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
@@ -656,7 +646,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
   const totalValue = expenses.reduce((sum, e) => sum + (e.totalValue || 0), 0);
 
   const statusColor = (s) => ({ prepaid: '#1B2A4A', payOnSite: '#185FA5', payLater: '#7b1fa2', optional: '#888', planned: '#BA7517' }[s] || '#888');
-  const statusLabel = (s) => ({ prepaid: 'Prepaid', payOnSite: 'Pay on site', payLater: 'Pay later', optional: 'Optional', planned: 'Budget estimate' }[s] || s);
+  const statusLabel = (s) => ({ prepaid: 'Confirmed', payOnSite: 'Pay on site', payLater: 'Pay later', optional: 'Optional', planned: 'Planned estimate' }[s] || s);
 
   const paymentSummary = (p) => {
     if (p.type === 'cashCard') return `$${p.amount || 0} · ${p.method || ''}${p.paid ? ' · ✓ Paid' : ''}`;
@@ -742,8 +732,8 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                         <h3 style={{ fontSize: '16px', fontWeight: '600' }}>{expense.name}</h3>
-                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '20px', background: statusColor(expense.eventStatus) + '20', color: statusColor(expense.eventStatus), fontWeight: '500' }}>
-                          {statusLabel(expense.eventStatus)}
+                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '20px', background: (expense.type === 'confirmed' ? '#1B2A4A' : '#BA7517') + '20', color: (expense.type === 'confirmed' ? '#1B2A4A' : '#BA7517'), fontWeight: '500' }}>
+                          {expense.type === 'confirmed' ? 'Confirmed' : 'Planned estimate'}
                         </span>
                       </div>
                       <div style={{ fontSize: '12px', color: '#888' }}>
@@ -762,6 +752,24 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                           ))}
                         </div>
                       )}
+                      <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #eee', fontSize: '12px', color: '#555', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                        {(() => {
+                          const ps = expense.payments || [];
+                          const cash = ps.reduce((s, p) => s + (Number(p.chargeAmount) || Number(p.amount) || Number(p.netCashOut) || 0), 0);
+                          const pts = ps.reduce((s, p) => s + (Number(p.pointsAmount) || 0), 0);
+                          const ptsVal = ps.reduce((s, p) => s + (Number(p.pointsValue) || 0), 0);
+                          const total = Number(expense.totalValue) || 0;
+                          const credits = ps.reduce((s, p) => s + (Number(p.creditAmount) || 0), 0);
+                          const covered = cash + ptsVal + credits;
+                          const remaining = total - covered;
+                          return (<>
+                            <span>Cash out: <b>&#36;{Math.round(cash).toLocaleString()}</b></span>
+                            {pts > 0 && <span>Points: <b>{pts.toLocaleString()}</b>{ptsVal > 0 && <span style={{ color: '#BA7517', fontWeight: '600' }}> · {(ptsVal * 100 / pts).toFixed(1)}¢ per point</span>}</span>}
+                            <span>Covered: <b>&#36;{Math.round(covered).toLocaleString()}</b> of &#36;{Math.round(total).toLocaleString()}</span>
+                            {remaining > 0.5 && <span style={{ color: '#A32D2D', fontWeight: '600' }}>Remaining &#36;{Math.round(remaining).toLocaleString()}</span>}
+                          </>);
+                        })()}
+                      </div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '1rem' }}>
                       <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '2px' }}>${(expense.totalValue || 0).toLocaleString()}{expense.localAmount >= 1 && expense.localCurrency && expense.localCurrency !== 'USD' && <span style={{ fontSize: '13px', color: '#8A9AB5', fontWeight: '400', marginLeft: '6px' }}>({expense.localCurrency} {Math.round(expense.localAmount).toLocaleString()})</span>}</div>
@@ -814,7 +822,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                         <h3 style={{ fontSize: '16px', fontWeight: '600' }}>{expense.name}</h3>
-                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '20px', background: '#BA751720', color: '#BA7517', fontWeight: '500' }}>Budget estimate</span>
+                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '20px', background: '#BA751720', color: '#BA7517', fontWeight: '500' }}>Planned estimate</span>
                       </div>
                       <div style={{ fontSize: '12px', color: '#888' }}>{expense.category}{expense.notes && ` · ${expense.notes}`}</div>
                     </div>
