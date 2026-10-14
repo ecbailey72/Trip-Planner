@@ -445,7 +445,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
 
 function ExpenseDetails({ form, setForm, isInternational, localCurrency, exchangeRate }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px', background: '#F3F1EB', border: '1px solid #E2E0D8', borderRadius: '12px', padding: '16px' }}>
       <div style={{ gridColumn: '1 / -1' }}>
         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Expense name *</label>
         <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
@@ -468,8 +468,8 @@ function ExpenseDetails({ form, setForm, isInternational, localCurrency, exchang
       </div>
       <div>
         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount' : 'Final / actual value'} (&#36;)</label>
-        <input type="number" value={form.localAmount && form.totalValue ? parseFloat(form.totalValue).toFixed(2) : form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
-          placeholder="0" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ fontSize: '24px', fontWeight: '600', color: '#BA7517' }}>&#36;</span><input type="number" value={form.localAmount && form.totalValue ? parseFloat(form.totalValue).toFixed(2) : form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
+          placeholder="0" style={{ width: '100%', padding: '6px 10px', fontSize: '24px', fontWeight: '600', color: '#BA7517', borderRadius: '6px', border: 'none', borderBottom: '1px solid #E2E0D8', background: 'transparent', outline: 'none' }} /></div>
         {isInternational && (
           <div style={{ marginTop: '6px' }}>
             <label style={{ display: 'block', fontSize: '11px', color: '#8A9AB5', marginBottom: '3px' }}>Or enter in {localCurrency}</label>
@@ -485,14 +485,7 @@ function ExpenseDetails({ form, setForm, isInternational, localCurrency, exchang
           </div>
         )}
       </div>
-      {form.type === 'confirmed' && (
-      <div>
-        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote / estimate (&#36;) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
-        <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
-          placeholder="What you expected to pay" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-        <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>e.g. quoted price before unexpected fees</div>
-      </div>
-      )}
+      
       <div>
         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Activity date</label>
         <input type="date" value={form.activityDate} onChange={e => setForm({ ...form, activityDate: e.target.value })}
@@ -505,7 +498,14 @@ function ExpenseDetails({ form, setForm, isInternational, localCurrency, exchang
             <input type="date" value={form.bookedDate} onChange={e => setForm({ ...form, bookedDate: e.target.value })}
               style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
           </div>
-          <div>
+          
+        </>
+      )}
+      <details style={{ gridColumn: '1 / -1', marginTop: '4px' }}><summary style={{ fontSize: '12px', color: '#5F5E5A', cursor: 'pointer', marginBottom: '8px' }}>More details</summary><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}><div>
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Original quote / estimate (&#36;) <span style={{ color: '#aaa', fontWeight: '400' }}>optional</span></label>
+        <input type="number" value={form.estimatedValue} onChange={e => setForm({ ...form, estimatedValue: parseFloat(e.target.value) || '' })}
+          placeholder="What you expected to pay" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        <div style={{ fontSize: '11px', color: '#aaa', marginTop: '3px' }}>e.g. quoted price before unexpected fees</div></div><div>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Vendor</label>
             <input value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })}
               placeholder="e.g. delta.com" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
@@ -514,15 +514,12 @@ function ExpenseDetails({ form, setForm, isInternational, localCurrency, exchang
             <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Confirmation #</label>
             <input value={form.confirmationNumber} onChange={e => setForm({ ...form, confirmationNumber: e.target.value })}
               placeholder="Confirmation number" style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc' }} />
-          </div>
-        </>
-      )}
-      <div style={{ gridColumn: '1 / -1' }}>
+          </div><div style={{ gridColumn: '1 / -1' }}>
         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Notes</label>
         <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
           placeholder="Any additional notes" rows={2}
           style={{ width: '100%', padding: '8px 10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', resize: 'vertical' }} />
-      </div>
+      </div></div></details>
     </div>
   );
 }
