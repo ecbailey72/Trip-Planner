@@ -52,8 +52,8 @@ function DashboardTab({ tripId, trip }) {
         else cashOwed += p.netCashOut || 0;
       }
       if (p.type === 'cashCard') {
-        if (p.paid) cashPaid += p.amount || 0;
-        else cashOwed += p.amount || 0;
+        if (p.paid) cashPaid += p.chargeAmount || p.amount || 0;
+        else cashOwed += p.chargeAmount || p.amount || 0;
       }
       if (p.type === 'portalBooking') {
         ptsValue += p.pointsValue || 0;
@@ -111,7 +111,7 @@ function DashboardTab({ tripId, trip }) {
     });
   });
 
-  const budgetConsumed = cashPaid + cashOwed + pointsCommittedValue + creditsCommitted + plannedTotal;
+  const budgetConsumed = confirmed.reduce((s, e) => s + (e.totalValue || 0), 0) + plannedTotal + spending.reduce((s, x) => s + x.amount, 0);
   const budgetRemaining = tripBudget - budgetConsumed;
   const budgetPct = tripBudget > 0 ? Math.min(100, Math.round(budgetConsumed / tripBudget * 100)) : 0;
 

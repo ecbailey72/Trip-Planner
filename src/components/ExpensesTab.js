@@ -752,12 +752,13 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
                       <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #eee', fontSize: '12px', color: '#555', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                         {(() => {
                           const ps = expense.payments || [];
-                          const cash = ps.reduce((s, p) => s + (Number(p.chargeAmount) || Number(p.amount) || Number(p.netCashOut) || 0), 0);
+                          const sc = ps.filter(p => p.type === 'statementCredit').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+                          const cash = ps.filter(p => p.type !== 'statementCredit').reduce((s, p) => s + (Number(p.chargeAmount) || Number(p.amount) || Number(p.netCashOut) || 0), 0) - sc;
                           const pts = ps.reduce((s, p) => s + (Number(p.pointsAmount) || 0), 0);
                           const ptsVal = ps.reduce((s, p) => s + (Number(p.pointsValue) || 0), 0);
                           const total = Number(expense.totalValue) || 0;
                           const credits = ps.reduce((s, p) => s + (Number(p.creditAmount) || 0), 0);
-                          const covered = cash + ptsVal + credits;
+                          const covered = cash + ptsVal + credits + sc;
                           const remaining = total - covered;
                           return (<>
                             <span>Cash out: <b>&#36;{Math.round(cash).toLocaleString()}</b></span>

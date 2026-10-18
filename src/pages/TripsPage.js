@@ -147,7 +147,7 @@ function TripsPage() {
                 <div style={{ fontSize: '11px', color: '#8A9AB5', marginTop: '3px' }}>Cash + points combined</div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#4A5568', marginBottom: '5px' }}>Daily spend budget ($)</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#4A5568', marginBottom: '5px' }}>Daily Spend Budget, per day ($)</label><div style={{ fontSize: '11px', color: '#718096', marginTop: '3px', marginBottom: '6px' }}>Amount you can spend each day on souvenirs, meals, gas and tolls, incidentals, etc.</div>
                 <input type="number" value={newTrip.dailyBudget}
                   onChange={e => setNewTrip({ ...newTrip, dailyBudget: parseFloat(e.target.value) || '' })}
                   placeholder="e.g. 200"
