@@ -725,7 +725,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
             <div style={{ marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Confirmed</h3>
               {confirmed.map(expense => (
-                <div key={expense._id} style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '8px' }}>
+                <div key={expense._id} onDoubleClick={() => openForm(expense)} style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
@@ -816,7 +816,7 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
             <div>
               <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Planned Estimates</h3>
               {planned.map(expense => (
-                <div key={expense._id} style={{ background: '#fafaf8', border: '1.5px dashed #ccc', borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '8px' }}>
+                <div key={expense._id} onDoubleClick={() => openForm(expense)} style={{ background: '#fafaf8', border: '1.5px dashed #ccc', borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
