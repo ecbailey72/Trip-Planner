@@ -131,7 +131,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
               <span style={{ width: '22px', textAlign: 'center', fontSize: '20px', fontWeight: '500', color: '#BA7517', paddingTop: '5px' }}>&#36;</span>
               <div style={{ flex: 1 }}>
-                <input type="text" inputMode="decimal" value={payment.amount || ''} onChange={e => update('amount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
+                <input type="text" inputMode="decimal" value={(() => { const s = String(payment.amount ?? ''); if (s === '') return ''; const p = s.split('.'); return Number(p[0] || 0).toLocaleString('en-US') + (p.length > 1 ? '.' + p[1] : ''); })()} onChange={e => { const c = e.target.value.replace(/[^0-9.]/g, ''); const i = c.indexOf('.'); update('amount', i === -1 ? c : c.slice(0, i + 1) + c.slice(i + 1).split('.').join('')); }} placeholder="0"
                   style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
                 {isInternational && (
                   <div style={{ marginTop: '18px' }}>
@@ -251,7 +251,7 @@ function PaymentForm({ payment, index, onChange, onRemove, localCurrency = 'USD'
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                 <span style={{ width: '22px', textAlign: 'center', fontSize: '20px', fontWeight: '500', color: '#BA7517', paddingTop: '5px' }}>&#36;</span>
                 <div style={{ flex: 1 }}>
-                  <input type="text" inputMode="decimal" value={payment.amount || ''} onChange={e => update('amount', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0"
+                  <input type="text" inputMode="decimal" value={(() => { const s = String(payment.amount ?? ''); if (s === '') return ''; const p = s.split('.'); return Number(p[0] || 0).toLocaleString('en-US') + (p.length > 1 ? '.' + p[1] : ''); })()} onChange={e => { const c = e.target.value.replace(/[^0-9.]/g, ''); const i = c.indexOf('.'); update('amount', i === -1 ? c : c.slice(0, i + 1) + c.slice(i + 1).split('.').join('')); }} placeholder="0"
                     style={{ width: '100%', border: 'none', borderBottom: '1px solid #E2E0D8', outline: 'none', background: 'transparent', fontSize: '24px', fontWeight: '500', color: '#BA7517', padding: '2px 0 4px' }} />
                   <div style={{ fontSize: '13px', color: '#5F5E5A', marginTop: '6px', fontStyle: 'italic' }}>
                     Value credited back to your card{Number(payment.pointsAmount) > 0 && Number(payment.amount) > 0 && <span style={{ color: '#BA7517', fontWeight: '600' }}> · {(Number(payment.amount) * 100 / Number(payment.pointsAmount)).toFixed(1)}¢ per point</span>}
@@ -468,7 +468,7 @@ function ExpenseDetails({ form, setForm, isInternational, localCurrency, exchang
       </div>
       <div>
         <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>{form.type === 'planned' ? 'Estimated amount' : 'Final / actual value'} (&#36;)</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ fontSize: '24px', fontWeight: '600', color: '#BA7517' }}>&#36;</span><input type="number" value={form.localAmount && form.totalValue ? parseFloat(form.totalValue).toFixed(2) : form.totalValue} onChange={e => setForm({ ...form, totalValue: parseFloat(e.target.value) || '' })}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ fontSize: '24px', fontWeight: '600', color: '#BA7517' }}>&#36;</span><input type="text" inputMode="decimal" value={(() => { const s = String(form.totalValue ?? ''); if (s === '') return ''; const parts = s.split('.'); return Number(parts[0] || 0).toLocaleString('en-US') + (parts.length > 1 ? '.' + parts[1] : ''); })()} onChange={e => { const c = e.target.value.replace(/[^0-9.]/g, ''); const first = c.indexOf('.'); const cleaned = first === -1 ? c : c.slice(0, first + 1) + c.slice(first + 1).replace(/\./g, ''); setForm({ ...form, totalValue: cleaned }); }}
           placeholder="0" style={{ width: '100%', padding: '6px 10px', fontSize: '24px', fontWeight: '600', color: '#BA7517', borderRadius: '6px', border: 'none', borderBottom: '1px solid #E2E0D8', background: 'transparent', outline: 'none' }} /></div>
         {isInternational && (
           <div style={{ marginTop: '6px' }}>
@@ -638,8 +638,9 @@ function ExpensesTab({ tripId, localCurrency = 'USD', exchangeRate = 1, onExpens
     }
   };
 
-  const confirmed = expenses.filter(e => e.type === 'confirmed');
-  const planned = expenses.filter(e => e.type === 'planned');
+  const sortedExpenses = [...expenses].sort((a, b) => { const da = a.activityDate || ''; const db = b.activityDate || ''; if (!da && !db) return 0; if (!da) return 1; if (!db) return -1; return da.localeCompare(db); });
+  const confirmed = sortedExpenses.filter(e => e.type === 'confirmed');
+  const planned = sortedExpenses.filter(e => e.type === 'planned');
   const totalValue = expenses.reduce((sum, e) => sum + (e.totalValue || 0), 0);
 
   const statusColor = (s) => ({ prepaid: '#1B2A4A', payOnSite: '#185FA5', payLater: '#7b1fa2', optional: '#888', planned: '#BA7517' }[s] || '#888');
