@@ -111,7 +111,8 @@ function DashboardTab({ tripId, trip }) {
     });
   });
 
-  const budgetConsumed = confirmed.reduce((s, e) => s + (e.totalValue || 0), 0) + plannedTotal + spending.reduce((s, x) => s + x.amount, 0);
+  const statementCredits = confirmed.reduce((s, e) => s + (e.payments || []).filter(p => p.type === 'statementCredit').reduce((t, p) => t + (Number(p.amount) || 0), 0), 0);
+  const budgetConsumed = cashPaid + cashOwed - statementCredits + spending.reduce((s, x) => s + x.amount, 0) + plannedTotal;
   const budgetRemaining = tripBudget - budgetConsumed;
   const budgetPct = tripBudget > 0 ? Math.min(100, Math.round(budgetConsumed / tripBudget * 100)) : 0;
 
@@ -200,10 +201,10 @@ function DashboardTab({ tripId, trip }) {
         <div style={{ background: budgetRemaining < 0 ? '#FCEBEB' : budgetPct > 85 ? '#FAEEDA' : '#E1F5EE', borderRadius: '12px', padding: '16px 20px', marginBottom: '1.5rem' }}>
           <div style={{ marginBottom: '10px' }}>
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#1B2A4A', marginBottom: '4px' }}>
-              Planned Trip Value: ${tripBudget.toLocaleString()}
+              Cash budget: ${tripBudget.toLocaleString()}
             </div>
             <div style={{ fontSize: '22px', fontWeight: '800', color: budgetRemaining < 0 ? '#A32D2D' : budgetPct > 85 ? '#BA7517' : '#1D9E75' }}>
-              ${Math.round(budgetConsumed).toLocaleString()} Planned ({budgetPct}%)
+              ${Math.round(budgetConsumed).toLocaleString()} committed ({budgetPct}% of budget)
             </div>
           </div>
           <div style={{ height: '8px', background: 'rgba(0,0,0,0.1)', borderRadius: '4px' }}>
@@ -222,13 +223,13 @@ function DashboardTab({ tripId, trip }) {
             </div>
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Cash out of pocket</div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1B2A4A' }}>${Math.round(cashPaid + cashOwed + totalSpent).toLocaleString()}</div>
-              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round((cashPaid + cashOwed + totalSpent) / tripBudget * 100)}% of planned trip value</div>}
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1B2A4A' }}>${Math.round(cashPaid + cashOwed - statementCredits + totalSpent).toLocaleString()}</div>
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{Math.round((cashPaid + cashOwed - statementCredits + totalSpent) / tripBudget * 100)}% of planned trip value</div>}
             </div>
             <div style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '6px', padding: '6px 10px' }}>
               <div style={{ fontSize: '10px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Still to plan</div>
               <div style={{ fontSize: '15px', fontWeight: '700', color: '#BA7517' }}>${Math.round(Math.max(0, budgetRemaining)).toLocaleString()}</div>
-              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{budgetPct}% planned so far</div>}
+              {tripBudget > 0 && <div style={{ fontSize: '10px', color: '#888' }}>{budgetPct}% of cash budget used</div>}
             </div>
           </div>
         </div>
@@ -378,7 +379,7 @@ function DashboardTab({ tripId, trip }) {
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Spend by category</div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => setChartView('tripValue')} style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '20px', border: '1px solid #ccc', background: chartView === 'tripValue' ? '#1B2A4A' : 'transparent', color: chartView === 'tripValue' ? 'white' : '#666', cursor: 'pointer', fontWeight: chartView === 'tripValue' ? '600' : '400' }}>Full trip value (incl. points)</button>
+                  <button onClick={() => setChartView('tripValue')} style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '20px', border: '1px solid #ccc', background: chartView === 'tripValue' ? '#1B2A4A' : 'transparent', color: chartView === 'tripValue' ? 'white' : '#666', cursor: 'pointer', fontWeight: chartView === 'tripValue' ? '600' : '400' }}>Total trip value (incl. points)</button>
                   <button onClick={() => setChartView('cashOnly')} style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '20px', border: '1px solid #ccc', background: chartView === 'cashOnly' ? '#1B2A4A' : 'transparent', color: chartView === 'cashOnly' ? 'white' : '#666', cursor: 'pointer', fontWeight: chartView === 'cashOnly' ? '600' : '400' }}>My cash out of pocket</button>
                 </div>
                 <div style={{ fontSize: '11px', color: '#555', fontStyle: 'italic', textAlign: 'right' }}>
